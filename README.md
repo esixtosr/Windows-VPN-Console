@@ -2,7 +2,11 @@
 
 A portable Windows 11 x64 network administration utility for seven CNIT 45500 Lab 2 VPN scenarios and reusable VPN profiles. Built with C#, WPF, MVVM and .NET 10. It controls established VPN engines; it does not implement VPN cryptography.
 
-**Status:** v0.1.0 development. See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current build, test and release evidence. Real lab connectivity requires configured endpoints and credentials; automated tests never certify a real VPN or encrypted traffic.
+**Version 0.1.0.** [Windows validation](https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37385355364) passed **122 tests**, native L2TP profile/route provisioning and removal, Credential Manager storage, and **33 WPF runtime assertions** on both the normal build and extracted self-contained ZIP. External VPN engines were absent on the runner; their live launches, handshakes and real lab traffic remain unverified. See [acceptance details](docs/Acceptance.md) and [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
+![Windows runtime screenshot showing the explicitly simulated Mock provider](docs/images/dashboard.png)
+
+The screenshot uses the Mock provider; it is not a real VPN connection.
 
 ## Quick start
 

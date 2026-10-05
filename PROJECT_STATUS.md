@@ -1,41 +1,44 @@
 # Project status
 
 ## Completed phases
-- .NET 10 solution, core models, secret-free profile persistence/import/export and editable group-derived Lab 2 topology.
-- WPF MVVM shell with nine pages, adaptive profiles, dependency detection, certificate metadata, settings and redacted live logs.
-- Native Windows RAS/L2TP management and IKEv2/SSTP paths, WireGuard adapter, OpenVPN management adapter, Shrew/NCP interactive adapters and configurable mock provider.
-- Windows diagnostics, IPv4 route validation, failure analysis, Copy for ChatGPT and sanitized eight-file evidence ZIPs.
-- Reviewed VyOS/pfSense helpers, seven checkoff catalogs, PSK/WireGuard configuration generation, docs and preset.
-- Private GitHub repository: https://github.com/esixtosr/CNIT455-VPN-Console.
-- Complete solution cross-build passes with zero warnings/errors on macOS .NET 10.0.201.
-- 120 tests pass locally; two Windows API tests correctly skip on macOS.
-- Windows CI run 37384382006 passed all 66 tests then present, including actual native L2TP provisioning/route inspection/removal and Credential Manager save/read/delete. WPF screenshots, mock stages, clipboard/evidence ran before a template smoke fixture failed; fixture fixed in next checkpoint.
+- .NET 10 solution and WPF MVVM application; nine pages, adaptive profiles, lab/generic modes and editable topology.
+- Native Windows adapter, OpenVPN/WireGuard adapters, Shrew/NCP interactive handoffs and configurable Mock provider.
+- Secret-free JSON profiles, optional Windows Credential Manager storage, certificate metadata and redacted logs/clipboard/evidence.
+- IPv4 route validation, deterministic troubleshooting, all seven checkoff catalogs, source-reviewed VyOS/pfSense helpers, client templates and packet-capture guidance.
+- 122 automated tests; Windows WPF and extracted self-contained release smoke checks; documentation, screenshot, licensing, presets, CI and portable packaging.
+- Private repository: https://github.com/esixtosr/CNIT455-VPN-Console.
 
 ## Current phase
-Final Windows runtime/package validation. Generator/security review completed; expanded 122-test suite and corrected WPF smoke fixture ready for CI.
+Automated release acceptance completed. The v0.1.0 tag workflow reruns acceptance and publishes the portable ZIP/checksum for the tagged commit. Live lab/server acceptance remains an explicit external verification task.
 
-## What currently works
-All projects compile. Core security, profiles, routes, deterministic troubleshooting and mock lifecycle pass tests. Windows adapters are implemented and source-reviewed, but actual OS integration and WPF runtime still need the first CI run. Manual/external engine limitations are explicit in the UI/docs.
+## What actually passed
+- Full solution restore/build: zero warnings/errors.
+- Windows CI run https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37385355364 at source checkpoint dcf4b93: **122/122 tests PASS**.
+- Real Windows L2TP profile creation, split route configuration, disconnected-state query and removal: PASS. No remote dial attempted.
+- Real Windows Credential Manager save/read/delete with generated disposable test values: PASS.
+- WPF navigation for nine pages, all seven Mock failure stages, connect/disconnect, simulated route analysis, profile serialization, clipboard/evidence redaction, group/policy changes and templates: **33 assertions PASS**.
+- Extracted self-contained EXE: same **33 assertions PASS**, with DOTNET_ROOT pointing to an absent runtime installation.
+- ZIP integrity, SHA-256, Windows PE x64 architecture and UI screenshots: checked.
+- External providers absent on the runner: missing-dependency behavior observed without crashing or claiming CONNECTED.
 
-## Known issues and limitations
-- Development host is macOS; Windows CI will run actual L2TP provisioning/cleanup, Credential Manager and WPF clipboard/navigation/mock/export smoke tests.
-- No lab endpoints/credentials or installed external VPN products were supplied for live server acceptance; no real VPN success is claimed.
-- Shrew legacy Windows 11 compatibility is unverified; Shrew/NCP safely hand off to their vendor UI and report unobserved status as UNKNOWN.
-- No reviewed modern VyOS PSK/IKEv1/XAUTH mobile recipe is generated. Exact course image/instructor configuration remains necessary.
-- Native certificate/EAP provisioning is limited; OpenVPN rejects unsafe imports and unsupported encrypted-key/challenge flows.
-- IPv4 route results are separate from IPv6/DNS/reachability/encryption evidence. See docs/Acceptance.md.
+## Known limits / not validated
+- No actual L2TP/IPsec, OpenVPN or WireGuard handshake, lab server reachability, AD authentication or encrypted packet flow was tested. Those require the user's Windows 11 VM, installed engines, endpoints and credentials.
+- Shrew and NCP vendor launches were not tested on installed products. Shrew has no verified Windows 11 support; both adapters are explicit interactive handoffs with UNKNOWN unobserved state. They do not terminate unrelated processes.
+- No reviewed VyOS 1.4/1.5 CLI recipe exists here for legacy PSK + IKEv1/XAUTH mobile access; obtain the exact course image/configuration. The app does not modify generated strongSwan files.
+- Native IKEv2 uses Windows EAP UI; automatic client-certificate selection/policy provisioning is not implemented. OpenVPN rejects unsafe imports, encrypted private-key prompts and unsupported MFA/challenges.
+- IPv4 route policy does not prove IPv6 protection, DNS leakage behavior, target authorization or encryption. Manual checkoff entries are attestations.
+- Imported provider files can contain secrets. Runtime file/provider-state cleanup after an abnormal process/OS crash may need manual attention; see Security.md.
 
 ## Exact next task
-1. Inspect the next Windows GitHub Actions run and fix any failures.
-2. Confirm all 122 tests plus full WPF/portable smoke suite pass.
-3. Review generated screenshots, verify extracted package and checksum.
-4. Commit/push final acceptance checkpoint, tag v0.1.0, verify GitHub Release.
-5. Download ZIP/checksum into the parent outputs directory and record exact commit/release evidence.
+For a new development session: read README.md and this file, inspect git status/log, restore/build/test, then continue only a specifically requested enhancement or the live Windows 11 checks in docs/Acceptance.md. Do not recreate completed work.
 
-## Build/test status
-`dotnet build CNIT455-VPN-Console.sln -c Release`: PASS, zero warnings/errors.
-`dotnet test tests/CNIT455.VPN.Tests -c Release --no-build`: 120 PASS, 2 Windows-only SKIP.
-First Windows build/unit tests PASS (66/66). WPF smoke reached template generation and failed on an unspecified authentication mode; corrected to an explicit certificate + username test. Full rerun and portable package validation pending.
+For lab acceptance: install the required official engine, supply real server/profile credentials locally, validate Local Test first, then AD/RADIUS/LDAP, routing/return paths/NAT/firewalls and public-interface captures. Record actual outcomes and export redacted evidence.
+
+## Release identity
+Tag: **v0.1.0**. Resolve the exact release commit with `git rev-parse v0.1.0`; the GitHub tag workflow supplies the corresponding build evidence.
+Release: https://github.com/esixtosr/CNIT455-VPN-Console/releases/tag/v0.1.0
+Asset: **CNIT455-VPN-Console-v0.1.0-win-x64.zip** plus **SHA256SUMS.txt**.
+The checksum in the release is authoritative; documentation edits change ZIP bytes, so candidate-build checksums are not reused.
 
 ## External dependencies
-Build: .NET 10 SDK. Run: self-contained Windows x64 package once published. External engines are separately installed OpenVPN Community/WireGuard; optional Shrew/NCP. No external engines, course PDF or real secrets are bundled.
+Build: .NET 10 SDK. Runtime: self-contained Windows x64 package. OpenVPN Community/WireGuard are separate optional installations; Shrew/NCP are optional legacy/commercial clients. No external VPN engines, course PDF or real secrets are distributed.

@@ -1,6 +1,14 @@
 # Release acceptance and live VM checks
 
-This document separates verified software behavior from operations that require a configured VPN server. See PROJECT_STATUS.md for the final CI run and test totals.
+This document separates verified software behavior from operations that require a configured VPN server.
+
+## Verified Windows results
+
+[CI run 37385355364](https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37385355364), source checkpoint `dcf4b93`, passed restore/build, all **122 tests**, publishing and both normal-build/portable-executable smoke runs. The GitHub-hosted Windows runner exercised real VpnClient cmdlets, Windows Credential Manager, WPF rendering, clipboard and ZIP filesystem operations. Each smoke run passed **33 assertions** across nine pages. The portable EXE ran from an extracted ZIP with DOTNET_ROOT redirected to a nonexistent installation. Local inspection verified the ZIP SHA-256, archive integrity and PE x64 machine type.
+
+The runner detected Windows native VPN/PowerShell; OpenVPN, WireGuard, Shrew and NCP were absent. Missing-client detection was exercised. Vendor launches and real VPN handshakes were not tested. Route-analysis tests use deterministic route fixtures; native provisioning verified configured split-tunnel routes but did not dial a server. The runner is a hosted Windows environment, not a supplied Windows 11 lab VM.
+
+The v0.1.0 tag workflow reruns the same gates for the release commit and publishes its own checksum alongside the package. See PROJECT_STATUS.md and the repository Actions/Release pages.
 
 ## Automated release gates
 

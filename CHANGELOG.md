@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 0.1.0 — 2026-10-05
 
 - Initial .NET 10/WPF Windows VPN console with saved lab and generic profiles.
 - Native, OpenVPN, WireGuard and external IPsec provider boundaries; developer mock failure scenarios.
@@ -10,5 +10,8 @@
 
 - Hardened imported OpenVPN/WireGuard profiles, enforced lab UDP/user-auth/PSK requirements, and added generator/security regression coverage.
 - Validated native L2TP provisioning/route cleanup and Credential Manager on Windows CI.
+
+- Passed 122 Windows tests and 33 WPF runtime assertions for both build output and extracted self-contained package.
+- Included runtime screenshot, upstream license notices and documented live-VM acceptance limits.
 
 Initial release limitations are tracked in PROJECT_STATUS.md and the provider documentation.
