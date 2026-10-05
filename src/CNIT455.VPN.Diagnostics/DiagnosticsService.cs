@@ -9,7 +9,7 @@ public sealed class DiagnosticsService(SecretRedactor redactor)
     public async Task<DiagnosticSnapshot> CollectAsync(VpnProfile profile,IVpnProvider provider,IEnumerable<VpnLogEvent> logs,string serverOutput="",CancellationToken cancellationToken=default)
     {
         var snapshot=new DiagnosticSnapshot { Profile=profile with {}, Logs=logs.TakeLast(1000).Select(l=>l with{Message=redactor.Redact(l.Message)}).ToList(),ServerOutput=redactor.Redact(serverOutput),IsAdministrator=IsAdministrator() };
-        try{snapshot.Status=await provider.GetStatusAsync(profile,cancellationToken);snapshot.Dependencies.Add(await provider.DetectInstallation(cancellationToken));}catch(Exception e) when(e is not OperationCanceledException){snapshot.CollectionNotes+="Provider query: "+redactor.Redact(e.Message)+"\n";}
+        try{snapshot.Status=await provider.GetStatusAsync(profile,cancellationToken);snapshot.Dependencies.Add(await provider.DetectInstallation(cancellationToken));snapshot.ProviderDiagnostics=redactor.Redact(await provider.GetDiagnosticsAsync(profile,cancellationToken));}catch(Exception e) when(e is not OperationCanceledException){snapshot.CollectionNotes+="Provider query: "+redactor.Redact(e.Message)+"\n";}
         foreach(var adapter in NetworkInterface.GetAllNetworkInterfaces())
         {
             try
@@ -34,6 +34,8 @@ public sealed class DiagnosticsService(SecretRedactor redactor)
                 else snapshot.CollectionNotes+="Route collection: "+redactor.Redact(process.StandardError)+"\n";
                 var events=await RunPowerShell("Get-WinEvent -FilterHashtable @{LogName='Application';ProviderName='RasClient';StartTime=(Get-Date).AddHours(-2)} -MaxEvents 20 -ErrorAction SilentlyContinue | Select-Object TimeCreated,Id,LevelDisplayName,Message | Format-List | Out-String -Width 180",cancellationToken);
                 snapshot.SystemEvents=redactor.Redact(events.StandardOutput);
+                var ipv6=await RunPowerShell("Get-NetRoute -AddressFamily IPv6 -ErrorAction SilentlyContinue | Select-Object DestinationPrefix,NextHop,InterfaceIndex,InterfaceAlias,RouteMetric | Format-Table -AutoSize | Out-String -Width 180",cancellationToken);
+                snapshot.Ipv6Routes=redactor.Redact(ipv6.StandardOutput);
             }
             catch(Exception e) when(e is not OperationCanceledException){snapshot.CollectionNotes+="Windows diagnostics: "+redactor.Redact(e.Message)+"\n";}
         }

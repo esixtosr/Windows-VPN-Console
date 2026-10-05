@@ -78,6 +78,8 @@ public sealed class DiagnosticSnapshot
     public ResultState GatewayReachable { get; set; }
     public string ServerOutput { get; set; } = "";
     public string SystemEvents { get; set; } = "";
+    public string ProviderDiagnostics { get; set; } = "";
+    public string Ipv6Routes { get; set; } = "";
     public string CollectionNotes { get; set; } = "";
 }
 public interface IVpnProvider

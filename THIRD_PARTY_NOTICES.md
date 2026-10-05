@@ -1,6 +1,6 @@
 # Third-party notices
 
-The application uses the .NET 10 runtime, WPF and standard .NET libraries from Microsoft/.NET Foundation, distributed under the MIT license and associated third-party notices. Self-contained releases retain the runtime license and notice files produced by `dotnet publish` where supplied. Official sources: https://github.com/dotnet/runtime and https://github.com/dotnet/wpf.
+The application uses the .NET 10 runtime, WPF and standard .NET libraries from Microsoft/.NET Foundation, distributed under the MIT license and associated third-party notices. Self-contained releases retain the runtime license and notice files produced by `dotnet publish` where supplied. The .NET MIT license is also checked in under licenses/ and copied into Docs/RuntimeNotices in releases. Official sources: https://github.com/dotnet/runtime and https://github.com/dotnet/wpf.
 
 Test-only NuGet packages (not shipped with the app):
 

@@ -6,11 +6,17 @@ public sealed class ProfileStore(string? root = null)
     public static string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"CNIT455-VPN-Console");
     public static JsonSerializerOptions JsonOptions { get; } = new() { WriteIndented=true, Converters={new JsonStringEnumConverter()}, PropertyNameCaseInsensitive=true, UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow };
     private readonly string directory = root ?? Path.Combine(DataDirectory,"Profiles");
+    public List<string> LoadWarnings { get; } = [];
     public async Task<IReadOnlyList<VpnProfile>> LoadAllAsync()
     {
         Directory.CreateDirectory(directory);
         var result=new List<VpnProfile>();
-        foreach(var file in Directory.EnumerateFiles(directory,"*.json")) result.Add(await ReadAsync(file));
+        LoadWarnings.Clear();
+        foreach(var file in Directory.EnumerateFiles(directory,"*.json"))
+        {
+            try { result.Add(await ReadAsync(file)); }
+            catch(Exception e) when(e is JsonException or InvalidDataException or IOException or UnauthorizedAccessException) { LoadWarnings.Add($"Skipped unreadable profile {Path.GetFileName(file)}. Original preserved. {e.GetType().Name}"); }
+        }
         return result;
     }
     public async Task SaveAsync(VpnProfile profile)
@@ -32,7 +38,8 @@ public sealed class ProfileStore(string? root = null)
     {
         if(new FileInfo(path).Length>1024*1024) throw new InvalidDataException("Profile exceeds 1 MiB.");
         var p=JsonSerializer.Deserialize<VpnProfile>(await File.ReadAllTextAsync(path),JsonOptions)??throw new InvalidDataException("Empty profile.");
-        if(p.Id==Guid.Empty || p.PermittedNetworks is null || p.ForbiddenNetworks is null || p.Name is null || p.Gateway is null || p.ProviderId is null) throw new InvalidDataException("Missing required profile fields.");
+        if(p.Id==Guid.Empty || p.PermittedNetworks is null || p.ForbiddenNetworks is null || p.PermittedNetworks.Any(x=>x is null) || p.ForbiddenNetworks.Any(x=>x is null) || typeof(VpnProfile).GetProperties().Where(x=>x.PropertyType==typeof(string)).Any(x=>x.GetValue(p) is null)) throw new InvalidDataException("Missing required profile fields.");
+        if(!Enum.IsDefined(p.Protocol) || !Enum.IsDefined(p.Authentication) || !Enum.IsDefined(p.TunnelMode) || !Enum.IsDefined(p.AuthBackend) || !Enum.IsDefined(p.LabPolicy) || !Enum.IsDefined(p.MockFailure)) throw new InvalidDataException("Unknown profile enum value.");
         return p;
     }
 }

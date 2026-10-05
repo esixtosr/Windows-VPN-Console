@@ -1,0 +1,83 @@
+name: Windows build, test and portable release
+on:
+  push:
+    branches: [main, 'codex/**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore CNIT455-VPN-Console.sln
+      - name: Build
+        run: dotnet build CNIT455-VPN-Console.sln -c Release --no-restore
+      - name: Test
+        run: dotnet test tests/CNIT455.VPN.Tests -c Release --no-build --logger "trx;LogFileName=unit-tests.trx" --results-directory artifacts/tests
+      - name: WPF runtime and navigation smoke test
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/smoke | Out-Null
+          $report = Join-Path (Get-Location) 'artifacts/smoke/smoke.json'
+          $exe = Resolve-Path 'src/CNIT455.VPN.App/bin/Release/net10.0-windows/CNIT455-VPN.exe'
+          $process = Start-Process $exe -ArgumentList '--smoke-test', ('"' + $report + '"') -PassThru
+          if (-not $process.WaitForExit(90000)) { $process.Kill(); throw 'WPF smoke timed out.' }
+          if ($process.ExitCode -ne 0 -or -not (Test-Path $report)) { throw 'WPF smoke failed.' }
+          Get-Content $report
+      - name: Publish and package
+        shell: pwsh
+        run: |
+          $version = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}' } else { 'v0.1.0' }
+          ./scripts/Publish.ps1 -Version $version
+      - name: Launch extracted self-contained release
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem artifacts/CNIT455-VPN-Console-*-win-x64.zip | Select-Object -First 1
+          Expand-Archive $zip.FullName artifacts/extracted -Force
+          $env:DOTNET_ROOT = Join-Path $env:TEMP 'no-installed-dotnet'
+          $env:DOTNET_ROOT_X64 = $env:DOTNET_ROOT
+          $env:DOTNET_MULTILEVEL_LOOKUP = '0'
+          $report = Join-Path (Get-Location) 'artifacts/smoke/portable-smoke.json'
+          $exe = Resolve-Path 'artifacts/extracted/CNIT455-VPN.exe'
+          $process = Start-Process $exe -ArgumentList '--smoke-test', ('"' + $report + '"') -PassThru
+          if (-not $process.WaitForExit(90000)) { $process.Kill(); throw 'Portable release smoke timed out.' }
+          if ($process.ExitCode -ne 0 -or -not (Test-Path $report)) { throw 'Portable release smoke failed.' }
+          Get-Content $report
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-validation
+          path: |
+            artifacts/tests
+            artifacts/smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CNIT455-VPN-Console-win-x64
+          path: |
+            artifacts/*.zip
+            artifacts/SHA256SUMS.txt
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: CNIT455-VPN-Console-win-x64
+          path: release
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" release/*.zip release/SHA256SUMS.txt --title "CNIT 455 VPN Console $RELEASE_TAG" --generate-notes

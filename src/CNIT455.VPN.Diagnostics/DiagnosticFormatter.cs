@@ -15,6 +15,8 @@ public sealed class DiagnosticFormatter(SecretRedactor redactor)
         text.AppendLine("\nINTERFACES");text.AppendLine(FormatInterfaces(d));
         text.AppendLine("\nLIKELY FAILURE STAGE");foreach(var f in d.Findings)text.AppendLine($"{f.Category}: {f.Result} — {f.Summary}\nNext checks: {f.NextChecks}");
         text.AppendLine("\nRELEVANT LOGS");foreach(var log in d.Logs)text.AppendLine($"{log.Timestamp:O} [{log.Severity}] {log.Provider} / {log.Stage}: {log.Message}");
+        text.AppendLine("\nPROVIDER DETAILS\n"+d.ProviderDiagnostics);
+        text.AppendLine("\nIPV6 ROUTES (separate from IPv4 policy result)\n"+d.Ipv6Routes);
         text.AppendLine("\nWINDOWS RAS EVENTS\n"+d.SystemEvents);
         text.AppendLine("\nSANITIZED SERVER OUTPUT\n"+d.ServerOutput);
         text.AppendLine("\nCOLLECTION NOTES\n"+d.CollectionNotes);

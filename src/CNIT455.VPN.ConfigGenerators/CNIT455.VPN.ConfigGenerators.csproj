@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../CNIT455.VPN.Core/CNIT455.VPN.Core.csproj" /></ItemGroup></Project>

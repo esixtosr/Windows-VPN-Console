@@ -1,0 +1,17 @@
+{
+  "name": "CNIT 455 - Lab 2",
+  "defaultGroupNumber": 33,
+  "publicNetwork": "44.104.{x}.0/24",
+  "vyosExternal": "44.104.{x}.4/24",
+  "pfSenseExternal": "44.104.{x}.5/24",
+  "pfSenseAdditionalNatAddress": "44.104.{x}.6/24",
+  "vyosHq": "192.168.2.0/24",
+  "pfSenseHq": "192.168.3.0/24",
+  "pfSenseRemote": "192.168.4.0/24",
+  "vyosRemote": "192.168.6.0/24",
+  "pfSenseDmz": "192.168.1.0/24",
+  "vyosDmz": "172.18.{x}.0/24",
+  "excludedLabNetwork": "192.168.5.0/24",
+  "ipsecMobilePolicy": "Strict",
+  "endpointNote": "Confirm distinct original/new router endpoints; extra NAT address is not proof of Remote pfSense identity."
+}

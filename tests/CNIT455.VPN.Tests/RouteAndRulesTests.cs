@@ -17,5 +17,10 @@ public sealed class RouteAndRulesTests
     [Fact]public void LongestPrefixWinsBeforeMetric()=>Assert.Equal(10,RouteAnalyzer.BestRoute([R("0.0.0.0/0",2,1),R("192.168.6.0/24",10,999)],"192.168.6.2")!.InterfaceIndex);
     [Theory][InlineData(VpnStage.Radius,"AUTHENTICATION")][InlineData(VpnStage.Xauth,"AUTHENTICATION")][InlineData(VpnStage.Dns,"DNS")][InlineData(VpnStage.Gateway,"TRANSPORT")][InlineData(VpnStage.Routing,"ROUTING")]
     public void RulesKeepFailureDomainsSeparate(VpnStage stage,string category){var d=new DiagnosticSnapshot{Logs=[new(DateTimeOffset.Now,LogSeverity.Error,"test",stage,"failure")]};Assert.Contains(TroubleshootingAnalyzer.Analyze(d),f=>f.Category==category&&f.Result==ResultState.Fail);}
+    [Fact]public void WireGuardHandshakeFailureIsTransportEvidence()
+    {
+        var snapshot=new DiagnosticSnapshot{Profile=new VpnProfile{Protocol=VpnProtocol.WireGuard},Logs=[new(DateTimeOffset.Now,LogSeverity.Error,"wireguard",VpnStage.Tunnel,"Tunnel handshake failed.")]};
+        Assert.Contains(TroubleshootingAnalyzer.Analyze(snapshot),x=>x.Category=="TRANSPORT"&&x.Result==ResultState.Fail);
+    }
     [Fact]public void MissingDataProducesUnknown(){Assert.All(TroubleshootingAnalyzer.Analyze(new()),f=>Assert.Equal(ResultState.Unknown,f.Result));}
 }
