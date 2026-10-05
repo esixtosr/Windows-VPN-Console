@@ -128,7 +128,15 @@ internal static class Ui
     internal static DataGrid Table(string path, params (string title, string property, double width)[] columns)
     {
         var grid = new DataGrid { IsReadOnly = true, MaxHeight = 350 }; grid.SetBinding(ItemsControl.ItemsSourceProperty, Bind(path, false));
-        foreach (var c in columns) grid.Columns.Add(new DataGridTextColumn { Header = c.title, Binding = Bind(c.property, false), Width = new DataGridLength(c.width, DataGridLengthUnitType.Star) }); return grid;
+        foreach (var c in columns)
+        {
+            var style=new Style(typeof(TextBlock));
+            style.Setters.Add(new Setter(TextBlock.TextTrimmingProperty,TextTrimming.CharacterEllipsis));
+            style.Setters.Add(new Setter(TextBlock.TextWrappingProperty,TextWrapping.NoWrap));
+            style.Setters.Add(new Setter(FrameworkElement.ToolTipProperty,Bind(c.property,false)));
+            grid.Columns.Add(new DataGridTextColumn { Header = c.title, Binding = Bind(c.property, false), ElementStyle=style, MinWidth=75, Width = new DataGridLength(c.width, DataGridLengthUnitType.Star) });
+        }
+        return grid;
     }
     internal static FrameworkElement Note(string text) => new Border { Background = Brush("#203442"), BorderBrush = Brush("#35556B"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(6), Padding = new Thickness(12), Margin = new Thickness(0, 4, 0, 14), Child = Text(text, 12, "#C2D9E8") };
 }

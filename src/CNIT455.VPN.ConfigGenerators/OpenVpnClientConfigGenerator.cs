@@ -20,17 +20,17 @@ public static class OpenVpnClientConfigGenerator
         var b = new StringBuilder()
             .AppendLine("# TEMPLATE ONLY: replace placeholders using the server administrator's exported profile.")
             .AppendLine("# Verify CA, expected server certificate CN, data ciphers and required tls-auth/tls-crypt.")
-            .AppendLine("# No passwords, PSKs or private-key contents are included.")
+            .AppendLine("# Replace inline PEM placeholders with your exported material. The template contains no secret values.")
             .AppendLine("client").AppendLine("dev tun").AppendLine("proto udp")
             .AppendLine($"remote {profile.Gateway} {(profile.Port == 0 ? 1194 : profile.Port)}")
             .AppendLine("nobind").AppendLine("persist-key").AppendLine("persist-tun")
             .AppendLine("remote-cert-tls server")
             .AppendLine("verify-x509-name \"<EXPECTED_SERVER_CERTIFICATE_CN>\" name")
-            .AppendLine("ca \"<CA_CERTIFICATE_FILE>\"")
+            .AppendLine("<ca>").AppendLine("<CA_CERTIFICATE_PEM>").AppendLine("</ca>")
             .AppendLine("tls-version-min 1.2")
             .AppendLine("auth-nocache");
         if (profile.Authentication is AuthenticationMode.Certificate or AuthenticationMode.CertificateAndUsername)
-            b.AppendLine("cert \"<CLIENT_CERTIFICATE_FILE>\"").AppendLine("key \"<CLIENT_PRIVATE_KEY_FILE>\"");
+            b.AppendLine("<cert>").AppendLine("<CLIENT_CERTIFICATE_PEM>").AppendLine("</cert>").AppendLine("<key>").AppendLine("<CLIENT_PRIVATE_KEY_PEM>").AppendLine("</key>");
         if (profile.Authentication is AuthenticationMode.UsernamePassword or AuthenticationMode.CertificateAndUsername)
             b.AppendLine("auth-user-pass");
         if (profile.TunnelMode == TunnelMode.Full)

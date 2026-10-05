@@ -27,10 +27,30 @@ public sealed class OpenVpnProvider(SecretRedactor? redactor=null) : VpnProvider
     {
         var issues=base.ValidateProfile(profile).ToList();
         if(profile.Protocol!=VpnProtocol.OpenVpn)issues.Add(new("Protocol","Select OpenVPN protocol."));
+        if(profile.Authentication is not (AuthenticationMode.Certificate or AuthenticationMode.CertificateAndUsername or AuthenticationMode.UsernamePassword or AuthenticationMode.ProviderDefault))issues.Add(new("Authentication","OpenVPN TLS requires certificate, username/password, or provider-default authentication."));
         if(!File.Exists(profile.ImportedConfigPath))issues.Add(new("ImportedConfigPath","Import a self-contained .ovpn profile first."));
         else if(new FileInfo(profile.ImportedConfigPath).Length>4*1024*1024)issues.Add(new("ImportedConfigPath","OpenVPN profile exceeds 4 MiB."));
-        else issues.AddRange(ValidateConfig(File.ReadAllText(profile.ImportedConfigPath)));
+        else
+        {
+            var config=File.ReadAllText(profile.ImportedConfigPath);issues.AddRange(ValidateConfig(config));
+            if(profile.IsLab)
+            {
+                var directives=Directives(config).ToArray();
+                if(!directives.Any(x=>x.Name=="auth-user-pass"))issues.Add(new("Authentication","Lab OpenVPN requires username authentication through pfSense LDAP; the imported profile needs auth-user-pass."));
+                if(directives.Any(x=>(x.Name=="proto"&&x.Argument.StartsWith("tcp",StringComparison.OrdinalIgnoreCase)) || (x.Name=="remote"&&x.Argument.Split((char[]?)null,StringSplitOptions.RemoveEmptyEntries).Skip(2).Any(v=>v.StartsWith("tcp",StringComparison.OrdinalIgnoreCase)))))issues.Add(new("Transport","Lab OpenVPN requires UDP. Import a UDP client profile."));
+            }
+        }
         return issues;
+    }
+    private static IEnumerable<(string Name,string Argument)> Directives(string config)
+    {
+        bool block=false;
+        foreach(var raw in config.Split('\n'))
+        {
+            var line=raw.Trim().TrimStart('\ufeff');if(line.Length==0||line.StartsWith('#')||line.StartsWith(';'))continue;
+            if(line.StartsWith("</")){block=false;continue;}if(line.StartsWith('<')){block=true;continue;}if(block)continue;
+            var pair=line.Split((char[]?)null,2,StringSplitOptions.RemoveEmptyEntries);yield return (pair[0].TrimStart('-').ToLowerInvariant(),pair.Length>1?pair[1]:"");
+        }
     }
     private static readonly HashSet<string> AllowedDirectives=new(StringComparer.OrdinalIgnoreCase)
     {
@@ -51,6 +71,7 @@ public sealed class OpenVpnProvider(SecretRedactor? redactor=null) : VpnProvider
             if(line.StartsWith('<'))
             {var tag=line.Trim('<','>',' ').ToLowerInvariant();if(!InlineBlocks.Contains(tag))issues.Add(new("Config","Unsupported inline OpenVPN block."));else {block=tag;if(tag=="ca")ca=true;}continue;}
             var pair=line.Split((char[]?)null,2,StringSplitOptions.RemoveEmptyEntries);var directive=pair[0].TrimStart('-');var argument=pair.Length>1?pair[1]:"";
+            if(new[]{"cipher","data-ciphers","data-ciphers-fallback"}.Contains(directive,StringComparer.OrdinalIgnoreCase) && argument.Split(':',' ','\t','"','\'').Any(x=>x.Equals("none",StringComparison.OrdinalIgnoreCase)))issues.Add(new("Config","Unencrypted OpenVPN cipher selection is not supported."));
             if(!AllowedDirectives.Contains(directive))issues.Add(new("Config","Unsafe or unsupported OpenVPN directive: "+directive));
             if(directive.Equals("auth-user-pass",StringComparison.OrdinalIgnoreCase)&&argument.Length>0)issues.Add(new("Config","auth-user-pass must not reference a plaintext credential file."));
             if(directive.Equals("dev",StringComparison.OrdinalIgnoreCase)&&!argument.Equals("tun",StringComparison.OrdinalIgnoreCase))issues.Add(new("Config","Only a routed tun device is supported."));

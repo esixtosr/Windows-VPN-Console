@@ -39,6 +39,11 @@ public sealed partial class MainViewModel
             return PacketCaptureGuide.For(protocol);
         }
     }
+    public Task CopyCertificateThumbprintAsync()
+    {
+        if (SelectedCertificate is null) throw new InvalidOperationException("Select a certificate from the table first.");
+        Clipboard.SetText(SelectedCertificate.Thumbprint); StatusText = "Certificate thumbprint copied. Configure certificate/EAP selection in the VPN engine that uses it."; return Task.CompletedTask;
+    }
     public Task CopyCaptureGuidanceAsync() => CopyAsync(CaptureGuidance, "Capture instructions copied. Review interface and filters before running a capture.");
     public Task GenerateWireGuardPskAsync()
     {

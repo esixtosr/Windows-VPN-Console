@@ -30,6 +30,22 @@ public sealed class ProviderTests
     {
         var provider=new MockVpnProvider{StageDelay=TimeSpan.FromMilliseconds(200)};var p=new VpnProfile();using var cancellation=new CancellationTokenSource(20);await Assert.ThrowsAnyAsync<OperationCanceledException>(()=>provider.ConnectAsync(p,new(),cancellation.Token));Assert.Equal(VpnState.Disconnected,(await provider.GetStatusAsync(p)).State);
     }
+    [Theory][InlineData("up calc.exe")][InlineData("plugin malicious.dll")][InlineData("auth-user-pass credentials.txt")][InlineData("management 0.0.0.0 1234")][InlineData("config another.ovpn")][InlineData("ca C:\\private\\ca.pem")]
+    public void OpenVpnImportRejectsCodeAndExternalFileDirectives(string extra)
+    {
+        var config="client\nremote vpn.example.edu 1194\nproto udp\ndev tun\n<ca>\nPUBLIC_CA_PLACEHOLDER\n</ca>\n"+extra;
+        Assert.Contains(OpenVpnProvider.ValidateConfig(config),x=>x.IsError);
+    }
+    [Fact] public void OpenVpnImportAcceptsConstrainedInlineTlsClient()
+    {
+        var config="client\nremote vpn.example.edu 1194\nproto udp\ndev tun\nauth-user-pass\nremote-cert-tls server\n<ca>\nPUBLIC_CA_PLACEHOLDER\n</ca>\n";
+        Assert.Empty(OpenVpnProvider.ValidateConfig(config));
+    }
+    [Fact] public void OpenVpnImportRejectsEncryptedPrivateKeyPrompt()
+    {
+        var config="client\nremote vpn.example.edu 1194\n<ca>\nPUBLIC_CA\n</ca>\n<key>\n-----BEGIN ENCRYPTED PRIVATE KEY-----\n</key>\n";
+        Assert.Contains(OpenVpnProvider.ValidateConfig(config),x=>x.Message.Contains("Encrypted"));
+    }
     [Fact] public void WireGuardImportRejectsExecutableHooks()
     {
         var key=Convert.ToBase64String(new byte[32]);var config=$"[Interface]\nPrivateKey={key}\nAddress=10.20.0.2/32\nPostUp=calc.exe\n[Peer]\nPublicKey={key}\nAllowedIPs=0.0.0.0/0\nEndpoint=vpn.example.edu:51820\n";

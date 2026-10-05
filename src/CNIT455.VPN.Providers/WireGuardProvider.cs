@@ -22,11 +22,12 @@ public sealed class WireGuardProvider(SecretRedactor? redactor=null) : VpnProvid
     {
         var issues=base.ValidateProfile(profile).ToList();
         if(profile.Protocol!=VpnProtocol.WireGuard)issues.Add(new("Protocol","Select WireGuard protocol."));
+        if(profile.Authentication is not (AuthenticationMode.PreSharedKey or AuthenticationMode.ProviderDefault))issues.Add(new("Authentication","WireGuard uses key pairs with an optional additional PSK, not certificates or usernames."));
         if(!string.IsNullOrWhiteSpace(profile.ImportedConfigPath))
         {
             if(!File.Exists(profile.ImportedConfigPath))issues.Add(new("ImportedConfigPath","WireGuard configuration file is missing."));
             else if(new FileInfo(profile.ImportedConfigPath).Length>1024*1024)issues.Add(new("ImportedConfigPath","WireGuard profile exceeds 1 MiB."));
-            else issues.AddRange(ValidateConfig(File.ReadAllText(profile.ImportedConfigPath)));
+            else issues.AddRange(ValidateConfig(File.ReadAllText(profile.ImportedConfigPath),profile.IsLab));
         }
         else
         {
@@ -35,7 +36,7 @@ public sealed class WireGuardProvider(SecretRedactor? redactor=null) : VpnProvid
         }
         return issues;
     }
-    public static IReadOnlyList<ValidationIssue> ValidateConfig(string config)
+    public static IReadOnlyList<ValidationIssue> ValidateConfig(string config,bool requirePsk=false)
     {
         var issues=new List<ValidationIssue>();string section="";var interfaces=0;var peers=0;
         var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -43,6 +44,7 @@ public sealed class WireGuardProvider(SecretRedactor? redactor=null) : VpnProvid
         var peerKeys=new HashSet<string>(["PublicKey","PresharedKey","AllowedIPs","Endpoint","PersistentKeepalive"],StringComparer.OrdinalIgnoreCase);
         void CheckSection()
         {
+            if(requirePsk && section.Equals("[Peer]",StringComparison.OrdinalIgnoreCase) && !seen.Contains("PresharedKey"))issues.Add(new("Config","Lab WireGuard requires a pre-shared key for every peer."));
             if(section.Equals("[Interface]",StringComparison.OrdinalIgnoreCase) && (!seen.Contains("PrivateKey") || !seen.Contains("Address")))issues.Add(new("Config","The interface requires a private key and tunnel address."));
             if(section.Equals("[Peer]",StringComparison.OrdinalIgnoreCase) && (!seen.Contains("PublicKey") || !seen.Contains("AllowedIPs")))issues.Add(new("Config","Each peer requires a public key and AllowedIPs."));
         }
@@ -123,7 +125,7 @@ public sealed class WireGuardProvider(SecretRedactor? redactor=null) : VpnProvid
         await gate.WaitAsync(cancellationToken);string? directory=null;
         try
         {
-            var config=BuildConfig(profile,secrets);var errors=ValidateConfig(config);if(errors.Count>0)return Fail(string.Join("; ",errors.Select(x=>x.Message)));
+            var config=BuildConfig(profile,secrets);var errors=ValidateConfig(config,profile.IsLab);if(errors.Count>0)return Fail(string.Join("; ",errors.Select(x=>x.Message)));
             foreach(var line in config.Split('\n')){var pair=line.Split('=',2);if(pair.Length==2&&(pair[0].Trim().Equals("PrivateKey",StringComparison.OrdinalIgnoreCase)||pair[0].Trim().Equals("PresharedKey",StringComparison.OrdinalIgnoreCase)))Redactor.RegisterSecret(pair[1].Trim());}
             var current=await GetStatusAsync(profile,cancellationToken);if(current.State is VpnState.Connected or VpnState.Connecting)return Fail("This app-owned tunnel is already installed. Disconnect before connecting again.");
             directory=PrivateRuntimeFiles.CreateDirectory();var name=TunnelName(profile);var path=Path.Combine(directory,name+".conf.dpapi");var clear=Encoding.UTF8.GetBytes(config);

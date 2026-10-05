@@ -17,3 +17,5 @@ Use a separate UDP TLS service with pfSense as CA/server and VyOS as certificate
 The generator supplies only documented [VyOS OpenVPN](https://docs.vyos.io/en/1.5/configuration/interfaces/openvpn.html) client/PKI bindings and route/NAT exclusions. Import the pfSense CA and unique client identity first. Align data ciphers and TLS-auth/TLS-crypt with the actual exported profile; these are explicitly left for deployment review. Do not use deprecated static-key mode for the certificate-based lab requirement.
 
 Use `show openvpn client` on VyOS and Status > OpenVPN on pfSense. Confirm bidirectional DMZ connectivity, native addresses and correlated public-side encrypted traffic. Certificate private keys and inline secret blocks must never enter the evidence bundle.
+
+The generated client template uses inline PEM placeholders for CA and optional client certificate/key material, plus an explicit expected server certificate name. Replace these locally before use; the template itself is not a runnable credential set. Lab imports require UDP and auth-user-pass. Explicit unencrypted cipher selections are rejected.

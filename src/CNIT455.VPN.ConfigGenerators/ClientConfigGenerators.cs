@@ -55,7 +55,8 @@ public static class WireGuardConfigGenerator
         if (!Enum.IsDefined(mode)) throw new ArgumentException("Select split or full tunnel mode.");
         if (mode == TunnelMode.Full) return ["0.0.0.0/0", "::/0"];
         if (networks.Length == 0) throw new ArgumentException("Split tunnel requires at least one permitted network.");
-        if (networks.Any(x => x is "0.0.0.0/0" or "::/0")) throw new ArgumentException("Split tunnel cannot contain a default route.");
+        if (GeneratorValidation.CoversAddressFamily(networks, 32) || GeneratorValidation.CoversAddressFamily(networks, 128))
+            throw new ArgumentException("Split tunnel routes cannot cover an entire IPv4 or IPv6 address family. Select full tunnel instead.");
         return networks;
     }
 
@@ -114,6 +115,23 @@ internal static class GeneratorValidation
             bytes[index] &= (byte)(0xff << (8 - retained));
         }
         return $"{new IPAddress(bytes)}/{prefix}";
+    }
+    public static bool CoversAddressFamily(IEnumerable<string> networks, int bits)
+    {
+        var cursor = System.Numerics.BigInteger.Zero;
+        var ranges = networks.Select(network => network.Split('/'))
+            .Where(parts => (Ipv4(parts[0]) ? 32 : 128) == bits)
+            .Select(parts =>
+            {
+                var first = new System.Numerics.BigInteger(IPAddress.Parse(parts[0]).GetAddressBytes(), isUnsigned: true, isBigEndian: true);
+                return (First: first, End: first + (System.Numerics.BigInteger.One << (bits - int.Parse(parts[1]))));
+            }).OrderBy(range => range.First);
+        foreach (var range in ranges)
+        {
+            if (range.First > cursor) return false;
+            cursor = System.Numerics.BigInteger.Max(cursor, range.End);
+        }
+        return cursor == System.Numerics.BigInteger.One << bits;
     }
     public static bool Key(string? value)
     {

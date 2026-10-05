@@ -41,7 +41,7 @@ internal static class ViewFactory
         root.Children.Add(baseFields);
         var auth = new StackPanel();
         var mode = vm.Authentication;
-        bool username = mode is AuthenticationMode.PskAndUsername or AuthenticationMode.CertificateAndUsername or AuthenticationMode.UsernamePassword || vm.Protocol is VpnProtocol.OpenVpn or VpnProtocol.IpsecMobile;
+        bool username = mode is AuthenticationMode.PskAndUsername or AuthenticationMode.CertificateAndUsername or AuthenticationMode.UsernamePassword || vm.Protocol == VpnProtocol.OpenVpn && mode == AuthenticationMode.ProviderDefault;
         bool psk = mode is AuthenticationMode.PskAndUsername or AuthenticationMode.PreSharedKey || vm.Protocol == VpnProtocol.WireGuard;
         bool certificate = mode is AuthenticationMode.Certificate or AuthenticationMode.CertificateAndUsername;
         if (username)
@@ -72,11 +72,11 @@ internal static class ViewFactory
         if (vm.Protocol == VpnProtocol.IpsecMobile)
         {
             auth.Children.Add(Ui.Field("Named profile in external client", Ui.Input("SelectedProfile.ExternalProfileName")));
-            auth.Children.Add(Ui.Note("Legacy IPsec uses the imported engine profile for IKE version, exchange mode, NAT-T, Mode Config, Phase 1/2 proposals, and PSK encoding. Verify these in the external client and the actual VyOS image. This console never invents Shrew PSK encoding or passes your password on its command line."));
+            auth.Children.Add(Ui.Note("Legacy IPsec credentials are entered in the external client; this console does not transfer passwords or PSKs to it. The imported engine profile controls for IKE version, exchange mode, NAT-T, Mode Config, Phase 1/2 proposals, and PSK encoding. Verify these in the external client and the actual VyOS image. This console never invents Shrew PSK encoding or passes your password on its command line."));
         }
         if (vm.Protocol == VpnProtocol.Ikev2) auth.Children.Add(Ui.Note("Windows owns the IKEv2 EAP sign-in and certificate selection workflow. Provider Default preserves that workflow. This application does not claim legacy PSK/XAUTH is supported by Windows IKEv2."));
         if (vm.Protocol == VpnProtocol.OpenVpn) auth.Children.Add(Ui.Note("Import a supported .ovpn file for UDP/TCP, CA trust, client certificates, and TLS settings. Full tunnel requires a server redirect-gateway policy or an equivalent reviewed client directive; choosing Full here describes the expected policy."));
-        if (certificate) auth.Children.Add(Certificates(vm));
+        if (certificate && vm.Protocol != VpnProtocol.OpenVpn) auth.Children.Add(Certificates(vm));
         if (auth.Children.Count > 0) root.Children.Add(Ui.Card("Authentication and engine configuration", auth,
             Ui.Check("Remember secrets on this Windows account", "RememberSecrets"),
             Ui.Actions(Ui.Button("Load remembered secrets", vm.MakeCommand(vm.LoadRememberedSecretsAsync)), Ui.Button("Forget secrets", vm.ForgetSecretsCommand)),
@@ -98,8 +98,8 @@ internal static class ViewFactory
     {
         var grid = Ui.Table("Certificates", ("Subject", "Subject", 2), ("Issuer", "Issuer", 2), ("Expiration", "NotAfter", 1.3), ("Validity", "ValidityStatus", 2));
         grid.SetBinding(DataGrid.SelectedItemProperty, Ui.Bind("SelectedCertificate"));
-        return Ui.Stack(Ui.Field("Certificate thumbprint", Ui.Input("SelectedProfile.CertificateThumbprint")), grid,
-            Ui.Actions(Ui.Button("Refresh store", vm.RefreshCertificatesCommand), Ui.Button("Use selected certificate", vm.MakeCommand(vm.SelectCertificateAsync)), Ui.Button("Import public certificate", vm.ImportCertificateCommand)),
+        return Ui.Stack(grid,
+            Ui.Actions(Ui.Button("Refresh store", vm.RefreshCertificatesCommand), Ui.Button("Copy selected thumbprint", vm.MakeCommand(vm.CopyCertificateThumbprintAsync)), Ui.Button("Import public certificate", vm.ImportCertificateCommand)),
             Ui.Text("Personal stores: Current User and Local Machine. Date validity does not verify chain trust or revocation. Private keys are never exported by this screen.", 12, "#A8BBCC"));
     }
     private static FrameworkElement Lab(MainViewModel vm)
@@ -183,7 +183,9 @@ internal static class ViewFactory
         var table = Ui.Table("Dependencies", ("Engine / prerequisite", "Name", 1.4), ("Found", "Installed", .55), ("Version", "Version", .8), ("Path", "ExecutablePath", 2.2), ("Details", "Details", 3));
         table.MaxHeight = 520;
         var selection = new ComboBox { ItemsSource = vm.Dependencies, DisplayMemberPath = "Name", SelectedIndex = vm.Dependencies.Count > 0 ? 0 : -1 };
-        return Ui.Stack(Ui.Card("Installed engines", Ui.Actions(Ui.Button("Refresh detection", vm.RefreshDependenciesCommand, true)), table), Ui.Card("Official installation resources", Ui.Field("Dependency", selection),
+        var detail=Ui.Text("",12,"#BDD0DD");detail.SetBinding(TextBlock.TextProperty,new Binding("SelectedItem.Details"){Source=selection});
+        var location=Ui.Text("",12,"#BDD0DD");location.SetBinding(TextBlock.TextProperty,new Binding("SelectedItem.ExecutablePath"){Source=selection});
+        return Ui.Stack(Ui.Card("Installed engines", Ui.Actions(Ui.Button("Refresh detection", vm.RefreshDependenciesCommand, true)), table), Ui.Card("Official installation resources", Ui.Field("Dependency", selection), location, detail,
             Ui.Actions(Ui.Button("Open official download", vm.MakeCommand(() => selection.SelectedItem is DependencyInfo info ? vm.OpenOfficialDownloadAsync(info) : Task.CompletedTask)), Ui.Button("Copy install command", vm.MakeCommand(() => selection.SelectedItem is DependencyInfo info ? vm.CopyInstallCommandAsync(info) : Task.CompletedTask))),
             Ui.Text("External software is never silently installed or bundled. A detected executable is not proof of current Windows 11 compatibility or a working tunnel. NCP requires its own license. Shrew uses a valid named profile and the vendor's credential prompt.", 12, "#A8BBCC")),
             Ui.Note("The console starts with normal user privileges. Native per-user VPN operations can run without elevation. If WireGuard or OpenVPN reports an administrator requirement, review the operation and restart the console as administrator for that session."));

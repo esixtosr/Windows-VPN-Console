@@ -38,6 +38,7 @@ public sealed partial class MainViewModel : ObservableObject
     private LabTopology topology = LabTopology.Create(33);
     private string selectedCheckoff = "";
     private bool shutdownComplete, statusPolling;
+    private long observationRevision;
     public MainViewModel(bool smoke = false)
     {
         this.smoke = smoke;
@@ -94,7 +95,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             if (IsBusy || HasActiveConnection) { Raise(nameof(SelectedProfile)); StatusText = "Disconnect the current tunnel before selecting another profile."; return; }
             if (!Set(ref selectedProfile, value)) return;
-            history.Clear(); RefreshLogText(); PastedServerOutput = "";
+            observationRevision++; history.Clear(); RefreshLogText(); PastedServerOutput = "";
             Secrets.Clear(); Secrets = new(); RememberSecrets = false;
             snapshot = null; Routes.Clear(); Findings.Clear(); DiagnosticText = "Run diagnostics for this connection to collect current evidence.";
             connection = new(VpnState.Unknown, "Status not yet queried"); ConnectionText = "UNKNOWN";
@@ -103,7 +104,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
     public string EditorRevision => SelectedProfile?.Id.ToString() ?? "";
-    public VpnProtocol Protocol { get => SelectedProfile?.Protocol ?? VpnProtocol.L2tpIpsec; set { if (SelectedProfile is null || SelectedProfile.Protocol == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.Protocol = value; InvalidateObservation(); RefreshProviderChoices(); RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
+    public VpnProtocol Protocol { get => SelectedProfile?.Protocol ?? VpnProtocol.L2tpIpsec; set { if (SelectedProfile is null || SelectedProfile.Protocol == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.Protocol = value; if (value == VpnProtocol.OpenVpn) SelectedProfile.Port = 1194; if (value == VpnProtocol.WireGuard) SelectedProfile.Port = 51820; InvalidateObservation(); RefreshProviderChoices(); RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
     public string ProviderId { get => SelectedProfile?.ProviderId ?? "native"; set { if (SelectedProfile is null || SelectedProfile.ProviderId == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.ProviderId = value; InvalidateObservation(); RefreshAuthenticationChoices(); RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
     public AuthenticationMode Authentication { get => SelectedProfile?.Authentication ?? AuthenticationMode.ProviderDefault; set { if (SelectedProfile is null || SelectedProfile.Authentication == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.Authentication = value; RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
     public string NetworksText { get => string.Join(Environment.NewLine, SelectedProfile?.PermittedNetworks ?? []); set { if (SelectedProfile is null) return; SelectedProfile.PermittedNetworks = ParseLines(value); Raise(); Raise(nameof(TargetNetworks)); RefreshAccessRules(); } }
@@ -190,8 +191,17 @@ public sealed partial class MainViewModel : ObservableObject
         AuthenticationChoices.Clear();
         if (capabilities.TryGetValue(ProviderId, out var caps))
         {
-            IEnumerable<AuthenticationMode> modes = caps.AuthenticationModes;
-            if (ProviderId == "native") modes = Protocol switch { VpnProtocol.L2tpIpsec => [AuthenticationMode.PskAndUsername], VpnProtocol.Sstp => [AuthenticationMode.UsernamePassword], _ => [AuthenticationMode.ProviderDefault, AuthenticationMode.UsernamePassword] };
+            AuthenticationMode[] applicable = Protocol switch
+            {
+                VpnProtocol.WireGuard => [AuthenticationMode.PreSharedKey, AuthenticationMode.ProviderDefault],
+                VpnProtocol.L2tpIpsec => [AuthenticationMode.PskAndUsername],
+                VpnProtocol.Sstp => [AuthenticationMode.UsernamePassword],
+                VpnProtocol.Ikev2 when ProviderId == "native" => [AuthenticationMode.ProviderDefault],
+                VpnProtocol.Ikev2 => [AuthenticationMode.ProviderDefault, AuthenticationMode.UsernamePassword, AuthenticationMode.Certificate],
+                VpnProtocol.OpenVpn => [AuthenticationMode.ProviderDefault, AuthenticationMode.UsernamePassword, AuthenticationMode.Certificate, AuthenticationMode.CertificateAndUsername],
+                _ => [AuthenticationMode.ProviderDefault, AuthenticationMode.PskAndUsername, AuthenticationMode.CertificateAndUsername]
+            };
+            var modes = applicable.Where(caps.AuthenticationModes.Contains);
             foreach (var mode in modes) AuthenticationChoices.Add(mode);
             if (SelectedProfile is not null && !AuthenticationChoices.Contains(SelectedProfile.Authentication)) SelectedProfile.Authentication = AuthenticationChoices.FirstOrDefault();
         }
@@ -205,7 +215,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
     private void InvalidateObservation()
     {
-        snapshot = null; Routes.Clear(); Findings.Clear(); history.Clear(); RefreshLogText();
+        observationRevision++; snapshot = null; Routes.Clear(); Findings.Clear(); history.Clear(); RefreshLogText();
         connection = new(VpnState.Unknown, "Configuration changed; refresh diagnostics to measure this engine."); ConnectionText = "UNKNOWN";
         DiagnosticText = "Run diagnostics for the current connection settings.";
     }
@@ -229,7 +239,7 @@ public sealed partial class MainViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            history.Clear(); RefreshLogText(); snapshot = null; Routes.Clear(); Findings.Clear();
+            observationRevision++; history.Clear(); RefreshLogText(); snapshot = null; Routes.Clear(); Findings.Clear();
             RegisterSecrets(); ConnectionText = "CONNECTING"; StatusText = "Connecting through " + EngineName + "…";
             await Provider.StartLogStreamAsync(profile);
             var engine = Provider;
@@ -245,18 +255,18 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (IsBusy) return;
         IsBusy = true;
-        try { var result = await Provider.DisconnectAsync(RequireProfile()); connection = result.Status ?? await Provider.GetStatusAsync(RequireProfile()); ConnectionText = connection.State.ToString().ToUpperInvariant(); StatusText = result.Message; await Provider.StopLogStreamAsync(); RaiseProfileProperties(); }
+        try { observationRevision++; var result = await Provider.DisconnectAsync(RequireProfile()); connection = result.Status ?? await Provider.GetStatusAsync(RequireProfile()); ConnectionText = connection.State.ToString().ToUpperInvariant(); StatusText = result.Message; await Provider.StopLogStreamAsync(); RaiseProfileProperties(); }
         finally { IsBusy = false; }
     }
     private async Task RefreshStatusAsync()
     {
         if (statusPolling || IsBusy || SelectedProfile is null) return;
         statusPolling = true;
-        var profile = SelectedProfile; var providerId = ProviderId;
+        var profile = SelectedProfile; var providerId = ProviderId; var revision = observationRevision;
         try
         {
             var current = await Provider.GetStatusAsync(profile);
-            if (SelectedProfile?.Id != profile.Id || ProviderId != providerId || IsBusy) return;
+            if (SelectedProfile?.Id != profile.Id || ProviderId != providerId || IsBusy || revision != observationRevision) return;
             connection = current; ConnectionText = connection.State.ToString().ToUpperInvariant(); RaiseProfileProperties();
         }
         catch (Exception error) { if (SelectedProfile?.Id == profile.Id && ProviderId == providerId) AppendLog(new(DateTimeOffset.Now, LogSeverity.Warning, "app", VpnStage.Tunnel, redactor.Redact(error.Message))); }
@@ -289,7 +299,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (issues.Any(x => x.IsError)) { StatusText = string.Join("\n", issues.Select(x => x.Message)); return; }
         RegisterSecrets(); await store.SaveAsync(profile);
         if (!smoke) { if (RememberSecrets) await secretStore.SaveAsync(profile.Id, Secrets); else await secretStore.DeleteAsync(profile.Id); }
-        var index = Profiles.IndexOf(profile); if (index >= 0) { Profiles[index] = profile; RaiseProfileProperties(); }
+        RaiseProfileProperties(); Raise(nameof(EditorRevision));
         StatusText = RememberSecrets ? "Profile saved. Secrets protected for this Windows account." : "Profile saved without secrets.";
     }
     private Task NewProfileAsync() { EnsureCanConfigure(); var p = new VpnProfile { Name = "New VPN connection", IsLab = LabMode, GroupNumber = GroupNumber }; Profiles.Add(p); SelectedProfile = p; SelectedPage = "Connections"; return Task.CompletedTask; }

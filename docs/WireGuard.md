@@ -17,3 +17,5 @@ The two VyOS peers join HQ and Remote networks using UDP, separate keypairs and 
 If Extended mobile-IPsec policy is required, HQ must also accept and route the mobile client's actual pool through WireGuard. Do not guess the pool from the LAN address. See the reviewed [VyOS 1.4](https://docs.vyos.io/en/1.4/configuration/interfaces/wireguard.html) and [1.5 interface references](https://docs.vyos.io/en/1.5/configuration/interfaces/wireguard.html).
 
 Use `show interfaces wireguard wg0 summary` (substitute your interface) to inspect handshake and byte counters. A handshake alone does not prove LAN routing, DNS, full-tunnel egress or Internet NAT. Record those tests separately.
+
+In Lab Mode, imported configurations must contain a PresharedKey for every peer. Generic Mode permits standard WireGuard without the optional PSK. The import validator rejects executable hooks and malformed or duplicate directives.

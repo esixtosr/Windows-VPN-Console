@@ -93,7 +93,7 @@ public sealed partial class MainViewModel
         Protocol = VpnProtocol.WireGuard; simulation.PeerPublicKey = Convert.ToBase64String(new byte[32]); simulation.TunnelAddress = "10.254.0.10/24";
         await GenerateWireGuardPskAsync(); Check(Convert.FromBase64String(Secrets.Psk).Length == 32, "WireGuard PSK uses 32 random bytes");
         await PreviewClientConfigAsync(); Check(ClientConfigText.Contains("<PRIVATE_KEY>") && ClientConfigText.Contains("AllowedIPs"), "WireGuard template uses placeholders");
-        Protocol = VpnProtocol.OpenVpn; await PreviewClientConfigAsync(); Check(ClientConfigText.Contains("remote-cert-tls server"), "OpenVPN template verifies server certificates");
+        Protocol = VpnProtocol.OpenVpn; Authentication = AuthenticationMode.CertificateAndUsername; await PreviewClientConfigAsync(); Check(ClientConfigText.Contains("remote-cert-tls server"), "OpenVPN template verifies server certificates");
         Protocol = VpnProtocol.IpsecMobile; SelectedPolicy = LabPolicy.Extended;
         Check(simulation.PermittedNetworks.Contains(Topology.VyosHq) && !simulation.ForbiddenNetworks.Contains(Topology.VyosHq), "Extended policy removes HQ from forbidden routes");
         SelectedPolicy = LabPolicy.Strict; Check(!simulation.PermittedNetworks.Contains(Topology.VyosHq), "Strict policy excludes HQ");
