@@ -35,7 +35,7 @@ jobs:
       - name: Publish and package
         shell: pwsh
         run: |
-          $version = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}' } else { 'v0.1.0' }
+          $version = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}' } else { 'v0.1.1' }
           ./scripts/Publish.ps1 -Version $version
       - name: Launch extracted self-contained release
         shell: pwsh

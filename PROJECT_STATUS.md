@@ -9,7 +9,7 @@
 - Private repository: https://github.com/esixtosr/CNIT455-VPN-Console.
 
 ## Current phase
-Automated release acceptance completed. The v0.1.0 tag workflow reruns acceptance and publishes the portable ZIP/checksum for the tagged commit. Live lab/server acceptance remains an explicit external verification task.
+Preparing v0.1.1 to fix white-on-white dropdown selections reported on Windows. Generated text now inherits the owning control's foreground instead of a global white override. Windows visual review and patch acceptance are pending; the historical v0.1.0 results below remain separate. Live lab/server acceptance remains an explicit external verification task.
 
 ## What actually passed
 - Full solution restore/build: zero warnings/errors.
@@ -35,9 +35,9 @@ For a new development session: read README.md and this file, inspect git status/
 For lab acceptance: install the required official engine, supply real server/profile credentials locally, validate Local Test first, then AD/RADIUS/LDAP, routing/return paths/NAT/firewalls and public-interface captures. Record actual outcomes and export redacted evidence.
 
 ## Release identity
-Tag: **v0.1.0**. Resolve the exact release commit with `git rev-parse v0.1.0`; the GitHub tag workflow supplies the corresponding build evidence.
-Release: https://github.com/esixtosr/CNIT455-VPN-Console/releases/tag/v0.1.0
-Asset: **CNIT455-VPN-Console-v0.1.0-win-x64.zip** plus **SHA256SUMS.txt**.
+Published baseline: **v0.1.0**. Patch in preparation: **v0.1.1**.
+Patch release (available after successful tag workflow): https://github.com/esixtosr/CNIT455-VPN-Console/releases/tag/v0.1.1
+Patch asset: **CNIT455-VPN-Console-v0.1.1-win-x64.zip** plus **SHA256SUMS.txt**.
 The checksum in the release is authoritative; documentation edits change ZIP bytes, so candidate-build checksums are not reused.
 
 ## External dependencies

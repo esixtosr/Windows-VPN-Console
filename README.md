@@ -2,7 +2,9 @@
 
 A portable Windows 11 x64 network administration utility for seven CNIT 45500 Lab 2 VPN scenarios and reusable VPN profiles. Built with C#, WPF, MVVM and .NET 10. It controls established VPN engines; it does not implement VPN cryptography.
 
-**Version 0.1.0.** [Windows validation](https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37385355364) passed **122 tests**, native L2TP profile/route provisioning and removal, Credential Manager storage, and **33 WPF runtime assertions** on both the normal build and extracted self-contained ZIP. External VPN engines were absent on the runner; their live launches, handshakes and real lab traffic remain unverified. See [acceptance details](docs/Acceptance.md) and [PROJECT_STATUS.md](PROJECT_STATUS.md).
+**Version 0.1.1** addresses unreadable dropdown selections in the dark interface. Release-specific validation is recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
+The preceding **v0.1.0** [Windows validation](https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37385355364) passed **122 tests**, native L2TP profile/route provisioning and removal, Credential Manager storage, and **33 WPF runtime assertions** on both the normal build and extracted self-contained ZIP. External VPN engines were absent on the runner; their live launches, handshakes and real lab traffic remain unverified. See [acceptance details](docs/Acceptance.md).
 
 ![Windows runtime screenshot showing the explicitly simulated Mock provider](docs/images/dashboard.png)
 
@@ -10,13 +12,22 @@ The screenshot uses the Mock provider; it is not a real VPN connection.
 
 ## Quick start
 
-1. Download `CNIT455-VPN-Console-v0.1.0-win-x64.zip` and `SHA256SUMS.txt` from this private repository's Releases page.
-2. Optionally verify with `Get-FileHash .\CNIT455-VPN-Console-v0.1.0-win-x64.zip -Algorithm SHA256`.
-3. Extract the ZIP into a folder and run **CNIT455-VPN.exe**. No Visual Studio, SDK, or separately installed .NET runtime is needed.
-4. Select Lab Mode, set the group number, confirm addresses, then choose a connection. Dependencies shows the required external engine.
-5. Start with Local Test authentication, collect diagnostics, then move server authentication to AD/RADIUS/LDAP. Use Check-Off to record evidence.
+1. On Windows 11 x64, sign in to GitHub using an account with access to this private repository and open [Releases](https://github.com/esixtosr/CNIT455-VPN-Console/releases).
+2. Open the latest published release and expand **Assets**. Download `CNIT455-VPN-Console-v0.1.1-win-x64.zip` (or the matching ZIP for that release) and `SHA256SUMS.txt`. **Code > Download ZIP** and the **Source code** assets contain source files, not the runnable application.
+3. Optionally compare `Get-FileHash .\CNIT455-VPN-Console-v0.1.1-win-x64.zip -Algorithm SHA256` with the matching entry in `SHA256SUMS.txt`.
+4. Right-click the ZIP, choose **Extract All**, then open the extracted folder and run **CNIT455-VPN.exe**. This is a portable application with no installer. No Visual Studio, SDK, or separately installed .NET runtime is needed.
+5. Select Lab Mode, set the group number, confirm addresses, then choose a connection. Dependencies shows the required external engine.
+6. Start with Local Test authentication, collect diagnostics, then move server authentication to AD/RADIUS/LDAP. Use Check-Off to record evidence.
 
 The executable is not code signed. Windows may show an unknown-publisher prompt. Confirm the repository and checksum before running. Do not disable Windows security protections.
+
+## Why GitHub and how updates work
+
+GitHub stores the source code and its change history, runs the Windows build and test workflow, and distributes versioned downloads through Releases. The downloaded application runs locally on your Windows computer; GitHub does not host your VPN or monitor your connections. You do not need Git installed, and the app does not need a GitHub login to run. Signing in is necessary to download from this private repository.
+
+There is no automatic updater. To update, disconnect the active VPN, close the console, download the new release ZIP, and extract it to a separate folder. Run the new folder's `CNIT455-VPN.exe`; keep the old folder until you have checked the update.
+
+Saved profiles and settings remain in `%LOCALAPPDATA%\CNIT455-VPN-Console` for the same Windows user, outside the application folder. Imported OpenVPN, WireGuard, and other external configuration files are linked by their original paths, so keep those files in place. If you stored an imported configuration inside the old application folder, move it to a secure permanent location and update the profile's configuration path before deleting that folder.
 
 ## Connections and dependencies
 
@@ -61,7 +72,7 @@ Requires .NET 10 SDK. A Windows machine is required to run WPF and provider inte
 dotnet restore CNIT455-VPN-Console.sln
 dotnet build CNIT455-VPN-Console.sln -c Release --no-restore
 dotnet test tests/CNIT455.VPN.Tests -c Release --no-build
-powershell -File scripts/Publish.ps1 -Version v0.1.0
+powershell -File scripts/Publish.ps1 -Version v0.1.1
 ```
 
 Core, generators, diagnostics and managed unit tests can also be built on macOS/Linux. Cross-compiling WPF uses `EnableWindowsTargeting`; a successful cross-build is not proof of Windows runtime behavior.

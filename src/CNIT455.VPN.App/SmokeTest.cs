@@ -50,6 +50,7 @@ public sealed partial class MainViewModel
             SelectedPage = page; await window.CapturePageAsync(Path.Combine(screenDirectory, page.Replace(' ', '-').ToLowerInvariant() + ".png")); visited.Add(page);
         }
         Check(visited.Count == 9, "All nine pages instantiated and captured");
+        await CaptureDropdownSmokeAsync(window, screenDirectory);
         GroupNumber = 41; await ApplyGroupAsync();
         Check(Topology.PublicNetwork == "44.104.41.0/24" && Topology.VyosDmz == "172.18.41.0/24", "Group number derives public and DMZ networks");
         var simulation = new VpnProfile { Name = "CI simulated connection", Protocol = VpnProtocol.L2tpIpsec, ProviderId = "mock", Gateway = "192.0.2.1", Username = "simulation", IsLab = false, PermittedNetworks = ["198.51.100.0/24"] };

@@ -26,7 +26,8 @@ public sealed class MainWindow : Window
         brand.Children.Add(new TextBlock { Text = "CNIT 455", FontSize = 24, FontWeight = FontWeights.Bold, Foreground = Ui.Brush("#5DE2C2") });
         brand.Children.Add(new TextBlock { Text = "VPN CONSOLE", FontSize = 12, Margin = new Thickness(1, 5, 0, 0), Foreground = Ui.Brush("#A8BBCC") });
         DockPanel.SetDock(brand, Dock.Top); side.Children.Add(brand);
-        var footer = new StackPanel(); footer.Children.Add(Ui.Text("v0.1.0  /  WINDOWS", 11, "#A8BBCC")); footer.Children.Add(Ui.Text("Your secrets stay local.", 11, "#A8BBCC")); DockPanel.SetDock(footer, Dock.Bottom); side.Children.Add(footer);
+        var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "unknown";
+        var footer = new StackPanel(); footer.Children.Add(Ui.Text($"v{version}  /  WINDOWS", 11, "#A8BBCC")); footer.Children.Add(Ui.Text("Your secrets stay local.", 11, "#A8BBCC")); DockPanel.SetDock(footer, Dock.Bottom); side.Children.Add(footer);
         var nav = new ListBox { ItemsSource = model.Navigation }; nav.SetBinding(IsEnabledProperty, Ui.Bind(nameof(model.CanEdit), false)); nav.SetBinding(ListBox.SelectedItemProperty, Ui.Bind(nameof(model.SelectedPage))); AutomationProperties.SetName(nav, "Primary navigation"); side.Children.Add(nav);
         var sideBorder = new Border { Background = Ui.Brush("#121E2A"), BorderBrush = Ui.Brush("#2B3A4B"), BorderThickness = new Thickness(0, 0, 1, 0), Child = side }; root.Children.Add(sideBorder);
         var work = new Grid { Margin = new Thickness(28, 24, 28, 16) }; work.RowDefinitions.Add(new() { Height = GridLength.Auto }); work.RowDefinitions.Add(new()); work.RowDefinitions.Add(new() { Height = GridLength.Auto }); work.RowDefinitions.Add(new() { Height = new GridLength(6) }); work.RowDefinitions.Add(new() { Height = new GridLength(185), MinHeight = 95 }); Grid.SetColumn(work, 1); root.Children.Add(work);
