@@ -113,7 +113,12 @@ public sealed partial class MainViewModel
         if (element.ActualWidth <= 0 || element.ActualHeight <= 0)
             throw new InvalidOperationException("Dropdown smoke found an unmeasured control: " + Path.GetFileName(path));
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth), (int)Math.Ceiling(element.ActualHeight), 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(element);
+        // Render at the bitmap origin rather than retaining the element's layout
+        // offset inside its parent field (which clips the selected text).
+        var visual = new DrawingVisual();
+        using (var drawing = visual.RenderOpen())
+            drawing.DrawRectangle(new VisualBrush(element) { Stretch = Stretch.Fill }, null, new Rect(0, 0, element.ActualWidth, element.ActualHeight));
+        bitmap.Render(visual);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using var output = File.Create(path);
