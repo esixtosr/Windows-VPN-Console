@@ -13,7 +13,7 @@ New-Item -ItemType Directory -Force (Join-Path $publish 'Docs'),(Join-Path $publ
 Copy-Item docs/* (Join-Path $publish 'Docs') -Recurse -Force
 Copy-Item Presets/* (Join-Path $publish 'Presets') -Recurse -Force
 Copy-Item README.md (Join-Path $publish 'README.txt') -Force
-Copy-Item LICENSE,THIRD_PARTY_NOTICES.md,CHANGELOG.md $publish -Force
+Copy-Item LICENSE,THIRD_PARTY_NOTICES.md,CHANGELOG.md,PROJECT_STATUS.md $publish -Force
 $noticeDirectory = Join-Path $publish 'Docs/RuntimeNotices'
 New-Item -ItemType Directory -Force $noticeDirectory | Out-Null
 Copy-Item licenses/* $noticeDirectory -Force

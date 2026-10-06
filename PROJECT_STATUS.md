@@ -9,7 +9,15 @@
 - Private repository: https://github.com/esixtosr/CNIT455-VPN-Console.
 
 ## Current phase
-Preparing v0.1.1 to fix white-on-white dropdown selections reported on Windows. Generated text now inherits the owning control's foreground instead of a global white override. Windows visual review and patch acceptance are pending; the historical v0.1.0 results below remain separate. Live lab/server acceptance remains an explicit external verification task.
+v0.1.1 patch acceptance completed. Generated dropdown text inherits the owning control's foreground instead of a global white override. Windows visual review verified readable selected values, disabled values and expanded menus. The tag workflow repeats the release gates before publishing. Live lab/server acceptance remains an explicit external verification task.
+
+## v0.1.1 patch validation — 2026-10-06
+- Windows CI https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37511988054 at checkpoint `ae3c6cb`: **122/122 tests PASS**, no skipped tests.
+- Both normal-build and extracted self-contained EXE smoke runs: **33 assertions PASS** across nine pages, including native L2TP provisioning/route cleanup and Credential Manager covered by the separate integration tests.
+- Captured nine real dropdown fields in closed, focused, disabled and expanded states. Inspected enum, string, integer and object-name selections, including all fields shown in the user's screenshots. Popup content is captured separately from the main window.
+- Navigation, primary buttons, DataGrid and logs remain readable. These are visual render checks; keyboard navigation was not separately automated.
+- Full local cross-build: zero warnings/errors; 120 managed tests passed on macOS and the two Windows-only tests were skipped there, then passed in Windows CI.
+- README and release notes explain GitHub downloads, portable extraction and manual upgrades. App version is read from the assembly; saved profiles remain under the same Windows user-data directory.
 
 ## What actually passed
 - Full solution restore/build: zero warnings/errors.
@@ -35,8 +43,8 @@ For a new development session: read README.md and this file, inspect git status/
 For lab acceptance: install the required official engine, supply real server/profile credentials locally, validate Local Test first, then AD/RADIUS/LDAP, routing/return paths/NAT/firewalls and public-interface captures. Record actual outcomes and export redacted evidence.
 
 ## Release identity
-Published baseline: **v0.1.0**. Patch in preparation: **v0.1.1**.
-Patch release (available after successful tag workflow): https://github.com/esixtosr/CNIT455-VPN-Console/releases/tag/v0.1.1
+Tag: **v0.1.1**. Resolve the exact release commit with `git rev-parse v0.1.1`; the successful tag workflow supplies the corresponding release build evidence.
+Release: https://github.com/esixtosr/CNIT455-VPN-Console/releases/tag/v0.1.1
 Patch asset: **CNIT455-VPN-Console-v0.1.1-win-x64.zip** plus **SHA256SUMS.txt**.
 The checksum in the release is authoritative; documentation edits change ZIP bytes, so candidate-build checksums are not reused.
 

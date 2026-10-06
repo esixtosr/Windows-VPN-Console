@@ -2,6 +2,8 @@
 
 ## 0.1.1 — 2026-10-06
 
+- Passed 122 Windows tests and both 33-assertion smoke runs; visually reviewed nine dropdowns and refreshed the runtime screenshot.
+
 - Fix unreadable dropdown selections and options in the dark interface, including protocol, authentication, tunnel policy, and configuration-template controls.
 - Explain how to download the portable executable from GitHub Releases, distinguish release assets from source archives, and update while retaining saved profiles and external configuration paths.
 - Preserve the v0.1.0 Windows acceptance record; this patch does not establish new live VPN or external-client compatibility claims.
