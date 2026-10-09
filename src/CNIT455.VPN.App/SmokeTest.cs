@@ -80,8 +80,19 @@ public sealed partial class MainViewModel
         GroupNumber = 41; await ApplyGroupAsync();
         Check(Topology.PublicNetwork == "44.104.41.0/24" && Topology.VyosDmz == "172.18.41.0/24", "Group number derives public and DMZ networks");
         var simulation = new VpnProfile { Name = "CI simulated connection", Protocol = VpnProtocol.L2tpIpsec, ProviderId = "mock", Gateway = "192.0.2.1", Username = "simulation", IsLab = false, PermittedNetworks = ["198.51.100.0/24"] };
-        Profiles.Add(simulation); SelectedProfile = simulation;
+        Profiles.Add(simulation);
+        // Switching while the editor is mounted refreshes the live selector
+        // collections; that must not replace either profile's saved engine.
+        foreach (var profile in new[] { simulation, external, simulation })
+        {
+            var expectedEngine = profile == simulation ? "mock" : "ncp";
+            SelectedProfile = profile; await Drain();
+            Check(ProviderId == expectedEngine, "Editor profile switch preserves engine: " + expectedEngine);
+        }
         Secrets.Psk = "SmokeSecret-NotForRealVpn"; Secrets.Password = "SmokePassword-NotForRealVpn";
+        var expectedAuthentication = Authentication;
+        RefreshProviderChoices(); await Drain();
+        Check(ProviderId == "mock" && Authentication == expectedAuthentication && Secrets.Psk == "SmokeSecret-NotForRealVpn" && Secrets.Password == "SmokePassword-NotForRealVpn", "Refreshing editor choices preserves engine, authentication and in-memory secrets");
         await SaveProfileAsync();
         var serialized = await File.ReadAllTextAsync(Path.Combine(dataRoot, "Profiles", simulation.Id.ToString() + ".json"));
         Check(!serialized.Contains(Secrets.Psk) && !serialized.Contains(Secrets.Password), "Profile persistence excludes secrets");

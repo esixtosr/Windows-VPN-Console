@@ -37,7 +37,7 @@ public sealed partial class MainViewModel : ObservableObject
     private DiagnosticSnapshot? snapshot;
     private LabTopology topology = LabTopology.Create(33);
     private string selectedCheckoff = "";
-    private bool shutdownComplete, statusPolling;
+    private bool shutdownComplete, statusPolling, refreshingChoices;
     private long observationRevision;
     public MainViewModel(bool smoke = false)
     {
@@ -105,8 +105,8 @@ public sealed partial class MainViewModel : ObservableObject
     }
     public string EditorRevision => SelectedProfile?.Id.ToString() ?? "";
     public VpnProtocol Protocol { get => SelectedProfile?.Protocol ?? VpnProtocol.L2tpIpsec; set { if (SelectedProfile is null || SelectedProfile.Protocol == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.Protocol = value; if (value == VpnProtocol.OpenVpn) SelectedProfile.Port = 1194; if (value == VpnProtocol.WireGuard) SelectedProfile.Port = 51820; InvalidateObservation(); RefreshProviderChoices(); RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
-    public string ProviderId { get => SelectedProfile?.ProviderId ?? "native"; set { if (SelectedProfile is null || SelectedProfile.ProviderId == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.ProviderId = value; InvalidateObservation(); RefreshAuthenticationChoices(); RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
-    public AuthenticationMode Authentication { get => SelectedProfile?.Authentication ?? AuthenticationMode.ProviderDefault; set { if (SelectedProfile is null || SelectedProfile.Authentication == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.Authentication = value; RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
+    public string ProviderId { get => SelectedProfile?.ProviderId ?? "native"; set { if (refreshingChoices || string.IsNullOrWhiteSpace(value) || SelectedProfile is null || SelectedProfile.ProviderId == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.ProviderId = value; InvalidateObservation(); RefreshAuthenticationChoices(); RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
+    public AuthenticationMode Authentication { get => SelectedProfile?.Authentication ?? AuthenticationMode.ProviderDefault; set { if (refreshingChoices || SelectedProfile is null || SelectedProfile.Authentication == value) return; if (!CanConfigure) { Raise(); return; } Secrets.Clear(); RememberSecrets = false; SelectedProfile.Authentication = value; RaiseProfileProperties(); Raise(nameof(EditorRevision)); } }
     public string NetworksText { get => string.Join(Environment.NewLine, SelectedProfile?.PermittedNetworks ?? []); set { if (SelectedProfile is null) return; SelectedProfile.PermittedNetworks = ParseLines(value); Raise(); Raise(nameof(TargetNetworks)); RefreshAccessRules(); } }
     public string ForbiddenText { get => string.Join(Environment.NewLine, SelectedProfile?.ForbiddenNetworks ?? []); set { if (SelectedProfile is null) return; SelectedProfile.ForbiddenNetworks = ParseLines(value); Raise(); RefreshAccessRules(); } }
     public LabPolicy SelectedPolicy { get => SelectedProfile?.LabPolicy ?? LabPolicy.Strict; set { if (SelectedProfile is null) return; LabPresets.ApplyPolicy(SelectedProfile, Topology, value); BuildCheckoffs(); Raise(nameof(ForbiddenText)); Raise(nameof(NetworksText)); Raise(nameof(TargetNetworks)); RefreshAccessRules(); Raise(); } }
@@ -190,31 +190,43 @@ public sealed partial class MainViewModel : ObservableObject
     }
     private void RefreshProviderChoices()
     {
-        ProviderChoices.Clear();
-        foreach (var cap in capabilities.Values.Where(x => x.Protocols.Contains(Protocol) && (DeveloperMode || x.Id != "mock")).OrderByDescending(x => Dependencies.Any(d => d.Id == x.Id && d.Installed)).ThenByDescending(x => x.CanConnect)) ProviderChoices.Add(new(cap.Id, cap.DisplayName));
-        if (SelectedProfile is not null && !ProviderChoices.Any(x => x.Id == SelectedProfile.ProviderId)) SelectedProfile.ProviderId = ProviderChoices.FirstOrDefault()?.Id ?? "native";
-        Raise(nameof(ProviderId)); RefreshAuthenticationChoices();
+        // Clearing a visible WPF selector writes its temporary empty selection
+        // back through the TwoWay binding. Only user choices may edit the profile.
+        var previousRefresh = refreshingChoices; refreshingChoices = true;
+        try
+        {
+            ProviderChoices.Clear();
+            foreach (var cap in capabilities.Values.Where(x => x.Protocols.Contains(Protocol) && (DeveloperMode || x.Id != "mock")).OrderByDescending(x => Dependencies.Any(d => d.Id == x.Id && d.Installed)).ThenByDescending(x => x.CanConnect)) ProviderChoices.Add(new(cap.Id, cap.DisplayName));
+            if (SelectedProfile is not null && !ProviderChoices.Any(x => x.Id == SelectedProfile.ProviderId)) SelectedProfile.ProviderId = ProviderChoices.FirstOrDefault()?.Id ?? "native";
+            Raise(nameof(ProviderId)); RefreshAuthenticationChoices();
+        }
+        finally { refreshingChoices = previousRefresh; }
     }
     private void RefreshAuthenticationChoices()
     {
-        AuthenticationChoices.Clear();
-        if (capabilities.TryGetValue(ProviderId, out var caps))
+        var previousRefresh = refreshingChoices; refreshingChoices = true;
+        try
         {
-            AuthenticationMode[] applicable = Protocol switch
+            AuthenticationChoices.Clear();
+            if (capabilities.TryGetValue(ProviderId, out var caps))
             {
-                VpnProtocol.WireGuard => [AuthenticationMode.PreSharedKey, AuthenticationMode.ProviderDefault],
-                VpnProtocol.L2tpIpsec => [AuthenticationMode.PskAndUsername],
-                VpnProtocol.Sstp => [AuthenticationMode.UsernamePassword],
-                VpnProtocol.Ikev2 when ProviderId == "native" => [AuthenticationMode.ProviderDefault],
-                VpnProtocol.Ikev2 => [AuthenticationMode.ProviderDefault, AuthenticationMode.UsernamePassword, AuthenticationMode.Certificate],
-                VpnProtocol.OpenVpn => [AuthenticationMode.ProviderDefault, AuthenticationMode.UsernamePassword, AuthenticationMode.Certificate, AuthenticationMode.CertificateAndUsername],
-                _ => [AuthenticationMode.ProviderDefault, AuthenticationMode.PskAndUsername, AuthenticationMode.CertificateAndUsername]
-            };
-            var modes = applicable.Where(caps.AuthenticationModes.Contains);
-            foreach (var mode in modes) AuthenticationChoices.Add(mode);
-            if (SelectedProfile is not null && !AuthenticationChoices.Contains(SelectedProfile.Authentication)) SelectedProfile.Authentication = AuthenticationChoices.FirstOrDefault();
+                AuthenticationMode[] applicable = Protocol switch
+                {
+                    VpnProtocol.WireGuard => [AuthenticationMode.PreSharedKey, AuthenticationMode.ProviderDefault],
+                    VpnProtocol.L2tpIpsec => [AuthenticationMode.PskAndUsername],
+                    VpnProtocol.Sstp => [AuthenticationMode.UsernamePassword],
+                    VpnProtocol.Ikev2 when ProviderId == "native" => [AuthenticationMode.ProviderDefault],
+                    VpnProtocol.Ikev2 => [AuthenticationMode.ProviderDefault, AuthenticationMode.UsernamePassword, AuthenticationMode.Certificate],
+                    VpnProtocol.OpenVpn => [AuthenticationMode.ProviderDefault, AuthenticationMode.UsernamePassword, AuthenticationMode.Certificate, AuthenticationMode.CertificateAndUsername],
+                    _ => [AuthenticationMode.ProviderDefault, AuthenticationMode.PskAndUsername, AuthenticationMode.CertificateAndUsername]
+                };
+                var modes = applicable.Where(caps.AuthenticationModes.Contains);
+                foreach (var mode in modes) AuthenticationChoices.Add(mode);
+                if (SelectedProfile is not null && !AuthenticationChoices.Contains(SelectedProfile.Authentication)) SelectedProfile.Authentication = AuthenticationChoices.FirstOrDefault();
+            }
+            Raise(nameof(Authentication)); Raise(nameof(EngineName)); Raise(nameof(EngineIntegration)); Raise(nameof(EngineCapabilities)); Raise(nameof(EngineLimitations));
         }
-        Raise(nameof(Authentication)); Raise(nameof(EngineName)); Raise(nameof(EngineIntegration)); Raise(nameof(EngineCapabilities)); Raise(nameof(EngineLimitations));
+        finally { refreshingChoices = previousRefresh; }
     }
     private void UpdateNavigation()
     {
@@ -243,6 +255,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (IsBusy) return;
         if (HasActiveConnection) { StatusText = "This tunnel is already active. Disconnect before reconnecting."; return; }
+        if (smoke && Provider is not MockVpnProvider) throw new InvalidOperationException("UI smoke tests may only connect the simulated engine.");
         var profile = RequireProfile();
         var errors = ProfileValidator.Validate(profile).Concat(Provider.ValidateProfile(profile)).Where(x => x.IsError).ToList();
         if (errors.Count > 0) { StatusText = string.Join(Environment.NewLine, errors.Select(x => $"{x.Field}: {x.Message}")); return; }
@@ -264,6 +277,7 @@ public sealed partial class MainViewModel : ObservableObject
     public async Task DisconnectAsync()
     {
         if (IsBusy) return;
+        if (smoke && Provider is not MockVpnProvider) throw new InvalidOperationException("UI smoke tests may only disconnect the simulated engine.");
         IsBusy = true;
         try { observationRevision++; var result = await Provider.DisconnectAsync(RequireProfile()); connection = result.Status ?? await Provider.GetStatusAsync(RequireProfile()); ConnectionText = connection.State.ToString().ToUpperInvariant(); StatusText = result.Message; snapshot = null; Routes.Clear(); Findings.Clear(); await Provider.StopLogStreamAsync(); RaiseProfileProperties(); }
         finally { IsBusy = false; }
