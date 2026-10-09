@@ -86,7 +86,7 @@ public sealed partial class MainViewModel : ObservableObject
     public ICommand GenerateServerCommand { get; } public ICommand CopyServerCommand { get; } public ICommand SaveServerCommand { get; } public ICommand CopyServerDiagnosticsCommand { get; }
     public ICommand GeneratePskCommand { get; } public ICommand CopyPskCommand { get; } public ICommand CopyLogsCommand { get; } public ICommand SaveLogsCommand { get; } public ICommand ClearLogsCommand { get; } public ICommand PauseLogsCommand { get; }
     public ICommand ExportEvidenceCommand { get; } public ICommand RefreshCertificatesCommand { get; } public ICommand ImportCertificateCommand { get; } public ICommand ForgetSecretsCommand { get; }
-    public string SelectedPage { get => selectedPage; set { if (Set(ref selectedPage, value)) Raise(nameof(PageDescription)); } }
+    public string SelectedPage { get => selectedPage; set { if (Set(ref selectedPage, value)) { Raise(nameof(PageDescription)); Raise(nameof(PageTitle)); } } }
     public string PageDescription => SelectedPage switch { "Dashboard" => "Connection health, routing, and the next step.", "Connections" => "Secure profiles for native and external VPN engines.", "Lab 2" => "One workspace for all seven lab VPNs.", "Server Config" => "Version-aware commands and configuration worksheets.", "Diagnostics" => "Observed evidence, routing analysis, and practical next checks.", "Check-Off" => "Record evidence and validate every requirement.", "Dependencies" => "Detect the engines installed on this Windows account.", "Settings" => "Workspace preferences, privacy, and development tools.", _ => "An independent network administration utility." };
     public VpnProfile? SelectedProfile
     {
@@ -110,7 +110,7 @@ public sealed partial class MainViewModel : ObservableObject
     public string NetworksText { get => string.Join(Environment.NewLine, SelectedProfile?.PermittedNetworks ?? []); set { if (SelectedProfile is null) return; SelectedProfile.PermittedNetworks = ParseLines(value); Raise(); Raise(nameof(TargetNetworks)); RefreshAccessRules(); } }
     public string ForbiddenText { get => string.Join(Environment.NewLine, SelectedProfile?.ForbiddenNetworks ?? []); set { if (SelectedProfile is null) return; SelectedProfile.ForbiddenNetworks = ParseLines(value); Raise(); RefreshAccessRules(); } }
     public LabPolicy SelectedPolicy { get => SelectedProfile?.LabPolicy ?? LabPolicy.Strict; set { if (SelectedProfile is null) return; LabPresets.ApplyPolicy(SelectedProfile, Topology, value); BuildCheckoffs(); Raise(nameof(ForbiddenText)); Raise(nameof(NetworksText)); Raise(nameof(TargetNetworks)); RefreshAccessRules(); Raise(); } }
-    public bool IsBusy { get => isBusy; private set { if (Set(ref isBusy, value)) { Raise(nameof(CanEdit)); Raise(nameof(CanConfigure)); } } }
+    public bool IsBusy { get => isBusy; private set { if (Set(ref isBusy, value)) { Raise(nameof(CanEdit)); Raise(nameof(CanConfigure)); Raise(nameof(CanStartConnection)); } } }
     public bool CanEdit => !IsBusy;
     public bool HasActiveConnection => connection.State is VpnState.Connected or VpnState.Connecting or VpnState.Disconnecting;
     public bool CanConfigure => !IsBusy && !HasActiveConnection;
@@ -119,7 +119,7 @@ public sealed partial class MainViewModel : ObservableObject
     public bool LabMode { get => settings.LabMode; set { settings.LabMode = value; UpdateNavigation(); Raise(); Raise(nameof(ModeLabel)); Raise(nameof(EditorRevision)); } }
     public string LogFilter { get => logFilter; set { if (Set(ref logFilter, value)) RefreshLogText(); } }
     public string LogSearch { get => logSearch; set { if (Set(ref logSearch, value)) RefreshLogText(); } }
-    public string ModeLabel => LabMode ? "CNIT 455 · LAB 2" : "GENERIC WORKSPACE";
+    public string ModeLabel => LabMode ? "CNIT 455 · LAB 2" : "YOUR LOCAL WORKSPACE";
     public int GroupNumber { get => settings.GroupNumber; set { settings.GroupNumber = value; Raise(); } }
     public int LogRetentionDays { get => settings.LogRetentionDays; set { settings.LogRetentionDays = value; Raise(); } }
     public bool RememberSecrets { get => rememberSecrets; set => Set(ref rememberSecrets, value); }
@@ -134,15 +134,17 @@ public sealed partial class MainViewModel : ObservableObject
     public string PastedServerOutput { get => pastedServerOutput; set { if (!Set(ref pastedServerOutput, value)) return; RegisterSecrets(); if (snapshot is not null) { snapshot.ServerOutput = redactor.Redact(value); DiagnosticText = new DiagnosticFormatter(redactor).Format(snapshot); } } }
     public string ConnectionName => SelectedProfile?.Name ?? "Select a connection";
     public string EngineName => capabilities.TryGetValue(ProviderId, out var caps) ? caps.DisplayName : ProviderId;
+    public string EngineIntegration => capabilities.TryGetValue(ProviderId, out var caps) ? $"{DisplayLabels.For(caps.IntegrationType)} · {caps.Licensing}" : "Integration not checked";
+    public string EngineCapabilities => capabilities.TryGetValue(ProviderId, out var caps) ? string.Join(" · ", Enum.GetValues<ProviderCapabilityFlags>().Where(flag => flag != ProviderCapabilityFlags.None && caps.Flags.HasFlag(flag)).Select(flag => flag.ToString().Replace("Supports", "").Replace("Requires", "Requires "))) : "No capability metadata loaded.";
     public string EngineLimitations => capabilities.TryGetValue(ProviderId, out var caps) ? caps.Limitations : "Select an installed engine to connect.";
-    public string TunnelIp => connection.TunnelIp ?? "Not observed";
-    public string TunnelAdapter => connection.InterfaceName ?? "Not observed";
-    public string LocalAdapter => snapshot?.Adapters.FirstOrDefault(x => x.Gateways.Count > 0)?.Name ?? "Run diagnostics";
+    public string TunnelIp => connection.TunnelIp ?? ObservedNetwork.Address(ObservedAdapter) ?? "Not observed";
+    public string TunnelAdapter => connection.InterfaceName ?? ObservedAdapter?.Name ?? "Not observed";
+    public string LocalAdapter => CurrentSnapshot is { } current ? ObservedNetwork.InternetAdapter(current)?.Name ?? "Not observed" : "Not checked";
     public string TargetNetworks => SelectedProfile is null || SelectedProfile.PermittedNetworks.Count == 0 ? "No networks specified" : string.Join("  ·  ", SelectedProfile.PermittedNetworks);
-    public string TunnelPolicy => SelectedProfile?.TunnelMode == TunnelMode.Full ? "FULL TUNNEL" : "SPLIT TUNNEL";
+    public string TunnelPolicy => SelectedProfile?.TunnelMode == TunnelMode.Full ? "Full tunnel" : "Split tunnel";
     public string ConnectedDuration => connection.ConnectedSince is null ? "—" : (DateTimeOffset.Now - connection.ConnectedSince.Value).ToString(@"hh\:mm\:ss");
     public string ConnectionMessage => connection.Message;
-    public string RouteSummary => snapshot?.Routing.Summary ?? "UNKNOWN · routing has not been measured";
+    public string RouteSummary => CurrentSnapshot?.Routing.Summary ?? "Routing has not been checked for these settings.";
     public string ProviderDetails => connection.Details is null ? "No provider telemetry collected." : string.Join(Environment.NewLine, connection.Details.Select(x => $"{x.Key}: {x.Value}"));
     public string DataLocation => dataRoot;
     public string SelectedCheckoff { get => selectedCheckoff; set { if (!Set(ref selectedCheckoff, value)) return; RefreshCheckoffRows(); Raise(nameof(CaptureGuidance)); } }
@@ -212,7 +214,7 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var mode in modes) AuthenticationChoices.Add(mode);
             if (SelectedProfile is not null && !AuthenticationChoices.Contains(SelectedProfile.Authentication)) SelectedProfile.Authentication = AuthenticationChoices.FirstOrDefault();
         }
-        Raise(nameof(Authentication)); Raise(nameof(EngineName)); Raise(nameof(EngineLimitations));
+        Raise(nameof(Authentication)); Raise(nameof(EngineName)); Raise(nameof(EngineIntegration)); Raise(nameof(EngineCapabilities)); Raise(nameof(EngineLimitations));
     }
     private void UpdateNavigation()
     {
@@ -228,7 +230,8 @@ public sealed partial class MainViewModel : ObservableObject
     }
     private void RaiseProfileProperties()
     {
-        foreach (var name in new[] { nameof(Protocol), nameof(ProviderId), nameof(Authentication), nameof(NetworksText), nameof(ForbiddenText), nameof(SelectedPolicy), nameof(ConnectionName), nameof(EngineName), nameof(TargetNetworks), nameof(TunnelPolicy), nameof(TunnelIp), nameof(TunnelAdapter), nameof(ConnectionMessage), nameof(RouteSummary), nameof(ProviderDetails), nameof(ConnectedDuration), nameof(CanConfigure), nameof(HasActiveConnection) }) Raise(name);
+        foreach (var name in new[] { nameof(Protocol), nameof(ProviderId), nameof(Authentication), nameof(NetworksText), nameof(ForbiddenText), nameof(SelectedPolicy), nameof(ConnectionName), nameof(EngineName), nameof(EngineIntegration), nameof(EngineCapabilities), nameof(EngineLimitations), nameof(TargetNetworks), nameof(TunnelPolicy), nameof(TunnelIp), nameof(TunnelAdapter), nameof(ConnectionMessage), nameof(RouteSummary), nameof(ProviderDetails), nameof(ConnectedDuration), nameof(CanConfigure), nameof(HasActiveConnection) }) Raise(name);
+        RaisePresentationProperties();
     }
     private IVpnProvider Provider => providers.First(x => x.Id == ProviderId && (DeveloperMode || x.Id != "mock"));
     private VpnProfile RequireProfile() => SelectedProfile ?? throw new InvalidOperationException("Select or create a connection first.");
@@ -262,7 +265,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (IsBusy) return;
         IsBusy = true;
-        try { observationRevision++; var result = await Provider.DisconnectAsync(RequireProfile()); connection = result.Status ?? await Provider.GetStatusAsync(RequireProfile()); ConnectionText = connection.State.ToString().ToUpperInvariant(); StatusText = result.Message; await Provider.StopLogStreamAsync(); RaiseProfileProperties(); }
+        try { observationRevision++; var result = await Provider.DisconnectAsync(RequireProfile()); connection = result.Status ?? await Provider.GetStatusAsync(RequireProfile()); ConnectionText = connection.State.ToString().ToUpperInvariant(); StatusText = result.Message; snapshot = null; Routes.Clear(); Findings.Clear(); await Provider.StopLogStreamAsync(); RaiseProfileProperties(); }
         finally { IsBusy = false; }
     }
     private async Task RefreshStatusAsync()
@@ -374,13 +377,15 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task SaveSettingsAsync() { if (LogRetentionDays is < 1 or > 365) throw new ArgumentException("Log retention must be 1–365 days."); ValidateTopology(); settings.Topology = Topology; BuildCheckoffs(); await File.WriteAllTextAsync(Path.Combine(dataRoot, "settings.json"), JsonSerializer.Serialize(settings, json)); RefreshAccessRules(); Raise(nameof(Topology)); StatusText = "Workspace settings saved."; }
     private async Task DetectDependenciesAsync()
     {
+        var selectedId = SelectedDependency?.Id;
         Dependencies.Clear();
         foreach (var provider in providers.Where(x => x.Id != "mock" || DeveloperMode)) { try { Dependencies.Add(await provider.DetectInstallation()); } catch (Exception error) { Dependencies.Add(new(provider.Id, provider.Id, false, null, null, redactor.Redact(error.Message))); } }
         var shellPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe");
         Dependencies.Add(new("powershell", "Windows PowerShell", File.Exists(shellPath), shellPath, null, "Used for Windows route, adapter, event, and VPN profile management."));
         var admin = new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent()).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
         Dependencies.Add(new("administrator", "Administrator privileges", admin, null, null, admin ? "This process is elevated." : "Running as your normal account. WireGuard tunnel installation and OpenVPN adapter operations may require an administrator-run session."));
-        RefreshProviderChoices(); StatusText = "Dependency detection complete. No VPN software was installed.";
+        SelectedDependency = Dependencies.FirstOrDefault(d => d.Id == selectedId) ?? Dependencies.FirstOrDefault(d => d.Id == ProviderId) ?? Dependencies.FirstOrDefault();
+        RefreshProviderChoices(); RaisePresentationProperties(); StatusText = "Engine check complete. Nothing was installed or changed.";
     }
     private Task GenerateServerAsync() { RefreshServerChecklist(); var result = ServerConfigGenerator.Generate(ServerOptions, Topology); ServerText = result.Title + "\n\n" + string.Join("\n", result.Warnings.Select(x => "NOTE: " + x)) + "\n\n" + result.Text; StatusText = result.Supported ? "Configuration generated. Review topology, version, and secret placeholders before applying." : "This template has a documented limitation. Review the generated guidance."; return Task.CompletedTask; }
     private async Task SaveServerAsync() { var dialog = new SaveFileDialog { Filter = "Text file (*.txt)|*.txt", FileName = "server-configuration.txt" }; if (dialog.ShowDialog() == true) { await File.WriteAllTextAsync(dialog.FileName, ServerText); StatusText = "Configuration worksheet saved with secret placeholders."; } }

@@ -10,7 +10,12 @@ public sealed class ShrewSoftProvider(SecretRedactor? redactor = null) : VpnProv
     private static string? Executable => ProviderEnvironment.FindProgram(@"ShrewSoft\VPN Client\ipsecc.exe", @"ShrewSoft VPN Client\ipsecc.exe");
     private static string? Manager => ProviderEnvironment.FindProgram(@"ShrewSoft\VPN Client\ipseca.exe", @"ShrewSoft VPN Client\ipseca.exe");
     private const string Limitations = "Legacy IKEv1/XAUTH client. Windows 11 compatibility is not verified by Shrew's published support matrix. Import .vpn files with Shrew VPN Access Manager, then enter the exact site name. Credentials are entered only in Shrew. Safe per-profile disconnect/status/log APIs are unavailable; use Shrew's window and paste sanitized diagnostic output here.";
-    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ProviderCapabilities(Id, "Shrew Soft (interactive)", [VpnProtocol.IpsecMobile], [AuthenticationMode.ProviderDefault], true, false, false, false, Limitations));
+    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ProviderCapabilities(Id, "Shrew Soft (interactive)", [VpnProtocol.IpsecMobile], [AuthenticationMode.ProviderDefault], true, false, false, false, Limitations)
+    {
+        IntegrationType = ProviderIntegrationType.ExternalInteractive,
+        Flags = ProviderCapabilityFlags.SupportsProfileImport | ProviderCapabilityFlags.SupportsXauth | ProviderCapabilityFlags.SupportsPsk | ProviderCapabilityFlags.SupportsSplitTunnel | ProviderCapabilityFlags.RequiresExternalInstallation,
+        CapabilityNotes = "The console opens the vendor client; tunnel state and disconnect are completed in Shrew."
+    });
     public override async Task<DependencyInfo> DetectInstallation(CancellationToken cancellationToken = default)
     {
         var services = await ProviderEnvironment.ExternalServicesAsync("Shrew", cancellationToken);
@@ -63,7 +68,13 @@ public sealed class NcpProvider(SecretRedactor? redactor = null) : VpnProviderBa
     public override string Id => "ncp";
     private static string? Executable => ProviderEnvironment.FindProgram(@"NCP\SecureClient\ncpmon.exe");
     private const string Limitations = "Separately licensed NCP Secure Entry client. Interactive handoff only. NCP advertises an API/CLI, but a current, version-specific, profile-scoped control and status contract was not verified. Configure/select the profile and enter credentials in NCP; no NCP binaries or licensing are bundled.";
-    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ProviderCapabilities(Id, "NCP Secure Entry (interactive)", [VpnProtocol.IpsecMobile, VpnProtocol.Ikev2], [AuthenticationMode.ProviderDefault], true, false, false, false, Limitations));
+    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ProviderCapabilities(Id, "NCP Secure Entry (interactive)", [VpnProtocol.IpsecMobile, VpnProtocol.Ikev2], [AuthenticationMode.ProviderDefault], true, false, false, false, Limitations)
+    {
+        IntegrationType = ProviderIntegrationType.ExternalInteractive,
+        Flags = ProviderCapabilityFlags.SupportsEap | ProviderCapabilityFlags.SupportsXauth | ProviderCapabilityFlags.SupportsPsk | ProviderCapabilityFlags.SupportsCertificateAuth | ProviderCapabilityFlags.SupportsSplitTunnel | ProviderCapabilityFlags.RequiresExternalInstallation | ProviderCapabilityFlags.RequiresLicense,
+        Licensing = "Commercial NCP license required",
+        CapabilityNotes = "Compatible profile creation and authentication occur in NCP; the console does not have a verified profile-scoped API yet."
+    });
     public override async Task<DependencyInfo> DetectInstallation(CancellationToken cancellationToken = default)
     {
         var services = await ProviderEnvironment.ExternalServicesAsync("NCP", cancellationToken);

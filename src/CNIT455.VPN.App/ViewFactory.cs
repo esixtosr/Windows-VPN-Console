@@ -21,29 +21,44 @@ internal static class ViewFactory
     }
     private static FrameworkElement Dashboard(MainViewModel vm)
     {
-        var connection = Ui.Card("Connection workspace", ProfilePicker(vm), Ui.BoundText("ConnectionName", 24, "#F1F5F9", FontWeights.SemiBold), Ui.BoundText("EngineName", 13, "#5DE2C2"), Ui.BoundText("ConnectionMessage", 13, "#B9CDDD"),
-            Ui.Actions(Ui.Button("Connect", vm.ConnectCommand, true), Ui.Button("Disconnect", vm.DisconnectCommand), Ui.Button("Test connection", vm.TestCommand), Ui.Button("Copy for ChatGPT", vm.CopyDiagnosticsCommand)));
-        var metrics = Ui.Two(Ui.Card("Tunnel", Ui.Text("ASSIGNED VPN ADDRESS", 11, "#A8BBCC"), Ui.BoundText("TunnelIp", 24, "#F1F5F9"), Ui.Text("ADAPTER", 11, "#A8BBCC"), Ui.BoundText("TunnelAdapter"), Ui.Text("CONNECTED DURATION", 11, "#A8BBCC"), Ui.BoundText("ConnectedDuration", 20)),
-            Ui.Card("Routing policy", Ui.BoundText("TunnelPolicy", 20, "#5DE2C2", FontWeights.SemiBold), Ui.BoundText("TargetNetworks"), Ui.BoundText("RouteSummary", 13, "#BDD0DD"), Ui.Text("PUBLIC / LOCAL ADAPTER", 11, "#A8BBCC"), Ui.BoundText("LocalAdapter")));
-        return Ui.Stack(connection, metrics, Ui.Card("Engine observations", Ui.BoundText("ProviderDetails", 12, "#BCD0DD"), Ui.BoundText("EngineLimitations", 12, "#DEBC80")),
-            Ui.Note("A connection state alone does not prove target access or public-side encryption. Diagnostics report UNKNOWN whenever the engine or operating system cannot observe a requirement."));
+        var disconnect = Ui.Button("Disconnect", vm.DisconnectCommand);
+        disconnect.SetBinding(UIElement.VisibilityProperty, new Binding("ShowDirectDisconnect") { Converter = new BooleanToVisibilityConverter() });
+        disconnect.SetBinding(UIElement.IsEnabledProperty, Ui.Bind("HasActiveConnection", false));
+        var connection = Ui.Card("Your connection", ProfilePicker(vm),
+            Ui.BoundText("EngineName", 15, "#5DE2C2", FontWeights.SemiBold), Ui.BoundText("EngineHelp", 13, "#B9CDDD"),
+            Ui.Actions(Ui.BoundButton("ConnectLabel", vm.ConnectCommand, true), disconnect, Ui.Button("Check connection", vm.TestCommand),
+                Ui.Button("Edit profile", vm.MakeCommand(() => { vm.SelectedPage = "Connections"; return Task.CompletedTask; }))),
+            Ui.BoundText("SelectedEngineReadiness", 11, "#A8BBCC"));
+        var metrics = Ui.Two(Ui.Card("Address & adapter", Ui.Text("OBSERVED IPV4 ADDRESS", 10, "#A8BBCC"), Ui.BoundText("TunnelIp", 26, "#F1F5F9", FontWeights.SemiBold),
+                Ui.BoundText("TunnelAdapter", 13, "#D6E4EE"), Ui.BoundText("AddressSource", 12, "#A8BBCC")),
+            Ui.Card("Network paths", Ui.BoundText("NetworkHeadline", 17, "#F1F5F9", FontWeights.SemiBold),
+                Ui.BoundText("TunnelPolicy", 12, "#5DE2C2"), Ui.BoundText("TargetNetworks", 13), Ui.BoundText("NetworkHelp", 12, "#A8BBCC"),
+                Ui.Text("INTERNET ROUTE USES", 10, "#A8BBCC"), Ui.BoundText("LocalAdapter", 13)));
+        return Ui.Stack(connection, Ui.BoundText("EvidenceTime", 11, "#A8BBCC"), metrics,
+            Ui.Disclosure("Connection details & troubleshooting", Ui.BoundText("ConnectionMessage"), Ui.BoundText("ProviderDetails", 12, "#BCD0DD"),
+                Ui.Text("ENGINE-REPORTED DURATION", 10, "#A8BBCC"), Ui.BoundText("ConnectedDuration"),
+                Ui.BoundText("EngineIntegration", 12, "#5DE2C2"), Ui.BoundText("EngineCapabilities", 12, "#BCD0DD"), Ui.BoundText("EngineLimitations", 12, "#DEBC80"),
+                Ui.Actions(Ui.BoundButton("DisconnectLabel", vm.DisconnectCommand), Ui.Button("Copy diagnostic report", vm.CopyDiagnosticsCommand))),
+            Ui.BoundText("SetupHint", 12, "#A8BBCC"));
     }
     private static FrameworkElement Connections(MainViewModel vm)
     {
-        var root = Ui.Stack(Ui.Card("Saved connections", ProfilePicker(vm), Ui.Actions(Ui.Button("New profile", vm.NewProfileCommand, true), Ui.Button("Duplicate", vm.DuplicateProfileCommand), Ui.Button("Import JSON", vm.ImportProfileCommand), Ui.Button("Export JSON", vm.ExportProfileCommand), Ui.Button("Delete", vm.DeleteProfileCommand))));
+        var root = Ui.Stack(Ui.Card("Saved profiles", ProfilePicker(vm), Ui.Actions(Ui.Button("Save profile", vm.SaveProfileCommand, true), Ui.Button("New profile", vm.NewProfileCommand), Ui.Button("Check settings", vm.ValidateCommand)),
+            Ui.Disclosure("More profile actions", Ui.Actions(Ui.Button("Duplicate", vm.DuplicateProfileCommand), Ui.Button("Import profile", vm.ImportProfileCommand), Ui.Button("Export profile", vm.ExportProfileCommand), Ui.Button("Reset to saved", vm.ResetProfileCommand), Ui.Button("Delete profile", vm.DeleteProfileCommand)))));
         root.SetBinding(UIElement.IsEnabledProperty, Ui.Bind("CanConfigure", false));
         if (vm.SelectedProfile is null) { root.Children.Add(Ui.Note("Create a connection to begin.")); return root; }
-        var baseFields = Ui.Card("Connection settings",
+        var baseFields = Ui.Card("Connection basics",
             Ui.Two(Ui.Field("Profile name", Ui.Input("SelectedProfile.Name")), Ui.Field("VPN type", Ui.Select("Protocol", Enum.GetValues<VpnProtocol>()))),
             Ui.Two(Ui.Field("VPN engine", Ui.Select("ProviderId", vm.ProviderChoices, "Name", "Id")), Ui.Field("Authentication", Ui.Select("Authentication", vm.AuthenticationChoices))),
             Ui.Two(Ui.Field(vm.Protocol == VpnProtocol.WireGuard ? "Peer endpoint / gateway" : "Gateway", Ui.Input("SelectedProfile.Gateway")), Ui.Field("Tunnel policy", Ui.Select("SelectedProfile.TunnelMode", Enum.GetValues<TunnelMode>()), "Split tunnel sends only permitted private routes through the VPN. Full tunnel sends Internet traffic through it; inspect IPv4 and IPv6 routes.")),
-            Ui.BoundText("EngineLimitations", 12, "#DEBC80"), Ui.Check("Advanced settings", "Advanced"), Ui.Check("Apply Lab 2 validation to this profile", "SelectedProfile.IsLab"));
+            Ui.BoundText("EngineHelp", 12, "#A8BBCC"), Ui.BoundText("SelectedEngineReadiness", 12, "#5DE2C2"),
+            Ui.Disclosure("Engine capabilities & limitations", Ui.BoundText("EngineIntegration", 12), Ui.BoundText("EngineCapabilities", 12), Ui.BoundText("EngineLimitations", 12, "#DEBC80")));
         root.Children.Add(baseFields);
         var auth = new StackPanel();
         var mode = vm.Authentication;
-        bool username = mode is AuthenticationMode.PskAndUsername or AuthenticationMode.CertificateAndUsername or AuthenticationMode.UsernamePassword || vm.Protocol == VpnProtocol.OpenVpn && mode == AuthenticationMode.ProviderDefault;
-        bool psk = mode is AuthenticationMode.PskAndUsername or AuthenticationMode.PreSharedKey || vm.Protocol == VpnProtocol.WireGuard;
-        bool certificate = mode is AuthenticationMode.Certificate or AuthenticationMode.CertificateAndUsername;
+        bool username = !vm.IsExternalClient && (mode is AuthenticationMode.PskAndUsername or AuthenticationMode.CertificateAndUsername or AuthenticationMode.UsernamePassword || vm.Protocol == VpnProtocol.OpenVpn && mode == AuthenticationMode.ProviderDefault);
+        bool psk = !vm.IsExternalClient && (mode is AuthenticationMode.PskAndUsername or AuthenticationMode.PreSharedKey || vm.Protocol == VpnProtocol.WireGuard);
+        bool certificate = !vm.IsExternalClient && (mode is AuthenticationMode.Certificate or AuthenticationMode.CertificateAndUsername);
         if (username)
         {
             auth.Children.Add(Ui.Two(Ui.Field(vm.Protocol == VpnProtocol.IpsecMobile ? "XAUTH username" : "Username", Ui.Input("SelectedProfile.Username"), "XAUTH adds user authentication to a legacy IKEv1 exchange. The server's authentication backend may be local, RADIUS, or LDAP."), Password(vm, "Password", () => vm.Secrets.Password, value => vm.Secrets.Password = value)));
@@ -58,7 +73,7 @@ internal static class ViewFactory
             auth.Children.Add(Ui.Two(Ui.Field("Tunnel address / prefix", Ui.Input("SelectedProfile.TunnelAddress")), Ui.Field("DNS servers", Ui.Input("SelectedProfile.Dns"))));
             auth.Children.Add(Ui.Two(Ui.Field("Endpoint UDP port", Ui.Input("SelectedProfile.Port")), Ui.Field("Listen UDP port (0 = automatic)", Ui.Input("SelectedProfile.ListenPort"))));
         }
-        if (vm.Protocol is VpnProtocol.OpenVpn or VpnProtocol.WireGuard or VpnProtocol.IpsecMobile)
+        if (vm.Protocol is VpnProtocol.OpenVpn or VpnProtocol.WireGuard || vm.ProviderId == "shrew")
         {
             auth.Children.Add(Ui.Field("External configuration file", Ui.Input("SelectedProfile.ImportedConfigPath"), "Only the path is stored. The source file may contain secrets and remains your responsibility. OpenVPN certificate and transport choices are read from the imported .ovpn."));
             auth.Children.Add(Ui.Actions(Ui.Button("Browse configuration", vm.ImportConfigCommand)));
@@ -69,26 +84,33 @@ internal static class ViewFactory
                 var preview = Ui.Output("ClientConfigText", 12); preview.Height = 180; auth.Children.Add(preview);
             }
         }
-        if (vm.Protocol == VpnProtocol.IpsecMobile)
+        if (vm.IsExternalClient)
         {
-            auth.Children.Add(Ui.Field("Named profile in external client", Ui.Input("SelectedProfile.ExternalProfileName")));
-            auth.Children.Add(Ui.Note("Legacy IPsec credentials are entered in the external client; this console does not transfer passwords or PSKs to it. The imported engine profile controls for IKE version, exchange mode, NAT-T, Mode Config, Phase 1/2 proposals, and PSK encoding. Verify these in the external client and the actual VyOS image. This console never invents Shrew PSK encoding or passes your password on its command line."));
+            auth.Children.Add(Ui.Field(vm.ProviderId == "shrew" ? "Existing Shrew site name" : "Profile name in NCP (reference only)", Ui.Input("SelectedProfile.ExternalProfileName")));
+            auth.Children.Add(Ui.Text($"Enter your username, password and shared key in {vm.ClientName}, not here. {vm.ClientName} also controls the IPsec proposals and routing. This console does not send or sync those settings.", 13, "#BDD0DD"));
+            auth.Children.Add(Ui.Actions(Ui.BoundButton("ConnectLabel", vm.ConnectCommand)));
         }
-        if (vm.Protocol == VpnProtocol.Ikev2) auth.Children.Add(Ui.Note("Windows owns the IKEv2 EAP sign-in and certificate selection workflow. Provider Default preserves that workflow. This application does not claim legacy PSK/XAUTH is supported by Windows IKEv2."));
+        if (vm.Protocol == VpnProtocol.Ikev2 && vm.ProviderId == "native") auth.Children.Add(Ui.Note("Windows handles IKEv2 sign-in and certificate selection. Its built-in IKEv2 engine does not support the legacy PSK/XAUTH workflow."));
         if (vm.Protocol == VpnProtocol.OpenVpn) auth.Children.Add(Ui.Note("Import a supported .ovpn file for UDP/TCP, CA trust, client certificates, and TLS settings. Full tunnel requires a server redirect-gateway policy or an equivalent reviewed client directive; choosing Full here describes the expected policy."));
         if (certificate && vm.Protocol != VpnProtocol.OpenVpn) auth.Children.Add(Certificates(vm));
-        if (auth.Children.Count > 0) root.Children.Add(Ui.Card("Authentication and engine configuration", auth,
+        if (auth.Children.Count > 0 && !vm.IsExternalClient) root.Children.Add(Ui.Card("Sign-in & engine settings", auth,
             Ui.Check("Remember secrets on this Windows account", "RememberSecrets"),
             Ui.Actions(Ui.Button("Load remembered secrets", vm.MakeCommand(vm.LoadRememberedSecretsAsync)), Ui.Button("Forget secrets", vm.ForgetSecretsCommand)),
             Ui.Text("Unchecked by default. Save removes any previously remembered secrets for this profile. Passwords, PSKs, and private keys never enter ordinary profile JSON.", 12, "#A8BBCC")));
+        else if (auth.Children.Count > 0) root.Children.Add(Ui.Card("Sign in with " + vm.ClientName, auth));
+        root.Children.Add(Ui.Check("Show advanced settings", "Advanced"));
+        if (vm.LabMode) root.Children.Add(Ui.Check("Apply Lab 2 validation to this profile", "SelectedProfile.IsLab"));
         if (vm.LabMode && vm.Protocol == VpnProtocol.IpsecMobile) root.Children.Add(Ui.Card("Lab access policy", Ui.Field("Interpretation", Ui.Select("SelectedPolicy", Enum.GetValues<LabPolicy>())), Ui.Note(LabPresets.PolicyNote)));
-        root.Children.Add(Ui.Card(vm.Protocol == VpnProtocol.WireGuard ? "AllowedIPs and policy" : "Expected routing",
+        root.Children.Add(Ui.Card(vm.Protocol == VpnProtocol.WireGuard ? "AllowedIPs and policy" : "Private networks",
+            Ui.Text(vm.IsExternalClient ? "List the networks you expect to reach so diagnostics can check their routes. This does not change the external client's routing." : "List private networks in CIDR notation, such as 10.20.0.0/24. Diagnostics compare these with Windows routes.", 12, "#A8BBCC"),
             Ui.Field(vm.Protocol == VpnProtocol.WireGuard ? "AllowedIPs (one CIDR per line)" : "Permitted networks (one CIDR per line)", Ui.Input("NetworksText", true), "AllowedIPs identifies peer-routed prefixes. A default route does not prove server authorization or return traffic."),
             vm.Advanced ? Ui.Field("Explicitly forbidden networks (one CIDR per line)", Ui.Input("ForbiddenText", true)) : Ui.Text("Use Advanced settings to record forbidden networks.", 12, "#A8BBCC")));
         if (vm.Advanced) root.Children.Add(Ui.Card("Profile notes", Ui.Field("Notes (no secrets)", Ui.Input("SelectedProfile.Notes", true)), Ui.Note("Phase 1 establishes the IKE security association; Phase 2 establishes traffic protection. ESP carries encrypted IPsec traffic. NAT-T encapsulates it for NAT traversal. These are engine/server settings, not independent proof of connectivity.")));
         if (vm.DeveloperMode) root.Children.Add(Ui.Card("Developer simulation", Ui.Field("Mock failure stage", Ui.Select("SelectedProfile.MockFailure", Enum.GetValues<MockFailure>())), Ui.Note("Select Mock in the engine field. Every simulated event is labelled MOCK; simulated routes and handshakes are not real network evidence.")));
-        root.Children.Add(Ui.Actions(Ui.Button("Save profile", vm.SaveProfileCommand, true), Ui.Button("Validate", vm.ValidateCommand), Ui.Button("Reset to saved", vm.ResetProfileCommand), Ui.Button("Connect", vm.ConnectCommand)));
-        return Ui.Stack(Ui.Actions(Ui.Button("Disconnect active tunnel", vm.DisconnectCommand)), root);
+        root.Children.Add(Ui.Actions(Ui.Button("Save profile", vm.SaveProfileCommand, true), Ui.BoundButton("ConnectLabel", vm.ConnectCommand), Ui.Button("Back to dashboard", vm.MakeCommand(() => { vm.SelectedPage = "Dashboard"; return Task.CompletedTask; }))));
+        var activeNotice = Ui.Stack(Ui.Note("Disconnect before editing this profile."), Ui.Actions(Ui.BoundButton("DisconnectLabel", vm.DisconnectCommand)));
+        activeNotice.SetBinding(UIElement.VisibilityProperty, new Binding("HasActiveConnection") { Converter = new BooleanToVisibilityConverter() });
+        return Ui.Stack(activeNotice, root);
     }
     private static FrameworkElement Password(MainViewModel vm, string label, Func<string> get, Action<string> set, string? tip = null)
     {
@@ -161,9 +183,9 @@ internal static class ViewFactory
         var paste = Ui.Input("PastedServerOutput", true); paste.Height = 110;
         return Ui.Stack(Ui.Card("Collect and share", ProfilePicker(vm), Ui.Actions(Ui.Button("Run diagnostics", vm.TestCommand, true), Ui.Button("Copy for ChatGPT", vm.CopyDiagnosticsCommand), Ui.Button("Export evidence ZIP", vm.ExportEvidenceCommand)), Ui.Text("Collects relevant VPN state, routes, adapters, DNS, installed engines, and VPN event evidence. Reports and logs redact registered secrets and recognized secret fields. Review addresses and usernames before sharing.", 12, "#A8BBCC")),
             Ui.Card("Analysis", Ui.BoundText("RouteSummary", 14, "#5DE2C2"), Ui.Table("Findings", ("Category", "Category", 1), ("Result", "Result", .7), ("Observation", "Summary", 2.2), ("Next checks", "NextChecks", 3))),
-            Ui.Card("Observed Windows routes", Ui.Table("Routes", ("Destination", "Destination", 1.4), ("Next hop", "NextHop", 1.3), ("Interface", "InterfaceAlias", 1.5), ("Metric", "EffectiveMetric", .6), ("VPN", "IsVpn", .5))),
-            Ui.Card("Optional server diagnostic output", Ui.Text("Paste relevant output from show commands. Secret labels and any secrets entered into this app are removed from the report. Unknown free-form secrets cannot be inferred; review before sharing.", 12, "#A8BBCC"), paste),
-            Ui.Card("Redacted report preview", output), Ui.Note("Sending a UDP datagram does not prove a port is open. UDP/4500 traffic alone does not prove payload encryption. Use a public-side capture and compare it with permitted private-side traffic for check-off evidence."));
+            Ui.Disclosure("Windows route table", Ui.Table("Routes", ("Destination", "Destination", 1.4), ("Next hop", "NextHop", 1.3), ("Interface", "InterfaceAlias", 1.5), ("Metric", "EffectiveMetric", .6))),
+            Ui.Disclosure("Add server output (optional)", Ui.Text("Paste relevant output from show commands. Secret labels and registered secrets are removed from the report. Review any free-form content before sharing.", 12, "#A8BBCC"), paste),
+            Ui.Disclosure("Full redacted report", output), Ui.Text("Route checks do not prove encrypted traffic or access to a private host. Verify those separately when needed.", 12, "#A8BBCC"));
     }
     private static FrameworkElement Checkoff(MainViewModel vm)
     {
@@ -180,15 +202,18 @@ internal static class ViewFactory
     }
     private static FrameworkElement Dependencies(MainViewModel vm)
     {
-        var table = Ui.Table("Dependencies", ("Engine / prerequisite", "Name", 1.4), ("Found", "Installed", .55), ("Version", "Version", .8), ("Path", "ExecutablePath", 2.2), ("Details", "Details", 3));
-        table.MaxHeight = 520;
-        var selection = new ComboBox { ItemsSource = vm.Dependencies, DisplayMemberPath = "Name", SelectedIndex = vm.Dependencies.Count > 0 ? 0 : -1 };
-        var detail=Ui.Text("",12,"#BDD0DD");detail.SetBinding(TextBlock.TextProperty,new Binding("SelectedItem.Details"){Source=selection});
-        var location=Ui.Text("",12,"#BDD0DD");location.SetBinding(TextBlock.TextProperty,new Binding("SelectedItem.ExecutablePath"){Source=selection});
-        return Ui.Stack(Ui.Card("Installed engines", Ui.Actions(Ui.Button("Refresh detection", vm.RefreshDependenciesCommand, true)), table), Ui.Card("Official installation resources", Ui.Field("Dependency", selection), location, detail,
-            Ui.Actions(Ui.Button("Open official download", vm.MakeCommand(() => selection.SelectedItem is DependencyInfo info ? vm.OpenOfficialDownloadAsync(info) : Task.CompletedTask)), Ui.Button("Copy install command", vm.MakeCommand(() => selection.SelectedItem is DependencyInfo info ? vm.CopyInstallCommandAsync(info) : Task.CompletedTask))),
-            Ui.Text("External software is never silently installed or bundled. A detected executable is not proof of current Windows 11 compatibility or a working tunnel. NCP requires its own license. Shrew uses a valid named profile and the vendor's credential prompt.", 12, "#A8BBCC")),
-            Ui.Note("The console starts with normal user privileges. Native per-user VPN operations can run without elevation. If WireGuard or OpenVPN reports an administrator requirement, review the operation and restart the console as administrator for that session."));
+        var table = Ui.Table("EngineRows", ("VPN engine", "Name", 1.5), ("Availability", "Availability", .8), ("How it works", "Role", 1.8));
+        table.MaxHeight = 340;
+        var selection = Ui.Select("SelectedDependency", vm.Dependencies, "Name");
+        var download = Ui.Button("Open official download", vm.MakeCommand(() => vm.SelectedDependency is { } info ? vm.OpenOfficialDownloadAsync(info) : Task.CompletedTask));
+        download.SetBinding(UIElement.IsEnabledProperty, Ui.Bind("HasDownload", false));
+        return Ui.Stack(Ui.Card("Available on this computer", Ui.BoundText("DependencySummary", 13, "#BDD0DD"),
+                Ui.Actions(Ui.Button("Refresh detection", vm.RefreshDependenciesCommand, true)), table),
+            Ui.Card("Engine details & downloads", Ui.Field("Engine or prerequisite", selection), Ui.BoundText("SelectedDependency.Details", 12, "#BDD0DD"),
+                Ui.Actions(download, Ui.Button("Copy install command", vm.MakeCommand(() => vm.SelectedDependency is { } info ? vm.CopyInstallCommandAsync(info) : Task.CompletedTask))),
+                Ui.Disclosure("Version & file location", Ui.BoundText("DependencyVersion", 12), Ui.BoundText("SelectedDependency.ExecutablePath", 12, "#A8BBCC"))),
+            Ui.Disclosure("Installation & administrator access", Ui.Text("Nothing is installed automatically. A detected engine is not proof of a working VPN. NCP uses its own license; Shrew is a legacy client.", 12, "#A8BBCC"),
+                Ui.Text("Start normally. If an engine requires administrator access for an operation, close the console and reopen it with Run as administrator. Your profiles stay in the same Windows account.", 12, "#A8BBCC")));
     }
     private static FrameworkElement Settings(MainViewModel vm)
     {
@@ -199,7 +224,7 @@ internal static class ViewFactory
             Ui.Card("Windows certificate inventory", Certificates(vm)),
             Ui.Card("Explain this", Ui.Text("PSK — pre-shared secret for peer authentication. IKE — negotiation for IPsec. ESP — protected IPsec traffic. XAUTH — legacy user authentication. RADIUS — centralized authentication service. LDAP — directory access. NAT-T — IPsec encapsulation through NAT. Mode Config — client address and network provisioning. AllowedIPs — prefixes assigned to a WireGuard peer. Phase 1 — IKE security association. Phase 2 — traffic security association.", 13, "#BDD0DD")));
     }
-    private static FrameworkElement About(MainViewModel vm) => Ui.Stack(Ui.Card("Windows VPN Console", Ui.Text(typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "unknown", 32, "#5DE2C2", FontWeights.SemiBold), Ui.Text("A focused Windows workspace for VPN management, configuration, troubleshooting, and evidence.", 17, "#DDEAF3"),
+    private static FrameworkElement About(MainViewModel vm) => Ui.Stack(Ui.Card("Windows VPN Console", Ui.Text(DisplayLabels.Version, 26, "#5DE2C2", FontWeights.SemiBold), Ui.Text("Your connections, network checks and VPN tools in one workspace.", 17, "#DDEAF3"),
         Ui.Text("Built with .NET 10 and WPF. VPN cryptography is delegated to Windows or installed third-party engines. No VPN binary is redistributed with this application.", 13, "#ADC3D5")),
         Ui.Card("Independent utility", Ui.Text("Windows VPN Console is an independent network administration utility. It is not affiliated with Purdue University, VyOS, Netgate/pfSense, OpenVPN, WireGuard, NCP, or Shrew Soft.", 13, "#ADC3D5")),
         Ui.Card("Designed for observable evidence", Ui.Text("UNKNOWN is an intentional result. The app never promotes an unobserved gateway response, encryption state, authentication phase, route, or firewall rule to PASS. Use real peer connectivity and capture evidence to complete a lab check-off.", 13, "#ADC3D5")),

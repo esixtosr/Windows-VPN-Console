@@ -7,7 +7,12 @@ public sealed class MockVpnProvider(SecretRedactor? redactor = null) : VpnProvid
     private readonly SemaphoreSlim gate = new(1,1);
     public TimeSpan StageDelay { get; set; } = TimeSpan.FromMilliseconds(220);
     public override string Id => "mock";
-    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ProviderCapabilities(Id,"Mock (simulated)",Enum.GetValues<VpnProtocol>(),Enum.GetValues<AuthenticationMode>(),true,true,true,false,"Developer Mode only. All routes, addresses and connection stages are simulated; no host networking changes."));
+    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ProviderCapabilities(Id,"Mock (simulated)",Enum.GetValues<VpnProtocol>(),Enum.GetValues<AuthenticationMode>(),true,true,true,false,"Developer Mode only. All routes, addresses and connection stages are simulated; no host networking changes.")
+    {
+        IntegrationType = ProviderIntegrationType.Integrated,
+        Flags = ProviderCapabilityFlags.SupportsNativeConnect | ProviderCapabilityFlags.SupportsNativeDisconnect | ProviderCapabilityFlags.SupportsLiveStatus | ProviderCapabilityFlags.SupportsSplitTunnel | ProviderCapabilityFlags.SupportsEap | ProviderCapabilityFlags.SupportsXauth | ProviderCapabilityFlags.SupportsPsk | ProviderCapabilityFlags.SupportsCertificateAuth,
+        CapabilityNotes = "Simulation capability is for UI and failure-path testing only."
+    });
     public override Task<DependencyInfo> DetectInstallation(CancellationToken cancellationToken = default) => Task.FromResult(new DependencyInfo(Id,"Mock",true,null,typeof(MockVpnProvider).Assembly.GetName().Version?.ToString(3),"Built in; simulation only."));
     public override IReadOnlyList<ValidationIssue> ValidateProfile(VpnProfile profile) => [];
     public override async Task<ProviderResult> ConnectAsync(VpnProfile profile, VpnSecrets secrets, CancellationToken cancellationToken = default)

@@ -9,7 +9,12 @@
     <Description>VPN profiles, diagnostics and configuration helpers for Windows.</Description>
     <RootNamespace>CNIT455.VPN.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/app.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets/app.ico" />
+    <Resource Include="Assets/app-icon.png" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../CNIT455.VPN.Core/CNIT455.VPN.Core.csproj" />
     <ProjectReference Include="../CNIT455.VPN.Providers/CNIT455.VPN.Providers.csproj" />

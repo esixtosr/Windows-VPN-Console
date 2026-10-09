@@ -31,6 +31,19 @@ public sealed class AsyncCommand(Func<Task> execute, Action<Exception> onError) 
 }
 
 public sealed record ProviderChoice(string Id, string Name) { public override string ToString() => Name; }
+public sealed record EngineRow(DependencyInfo Info)
+{
+    public string Name => Info.Name;
+    public string Availability => Info.Installed ? "Detected" : "Not detected";
+    public string Role => Info.Id switch
+    {
+        "native" => "Built into Windows",
+        "wireguard" or "openvpn" => "Managed by this console",
+        "ncp" => "Opens NCP · separate license",
+        "shrew" => "Opens Shrew · legacy client",
+        "mock" => "Simulation only", _ => "External engine"
+    };
+}
 public sealed class CheckoffRow(CheckoffItem item) : ObservableObject
 {
     private ResultState result = item.Result;

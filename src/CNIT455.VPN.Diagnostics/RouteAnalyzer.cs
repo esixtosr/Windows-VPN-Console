@@ -24,7 +24,7 @@ public static class RouteAnalyzer
         var evidence=new List<string>();
         bool Tunnel(RouteEntry r)=>vpnInterfaceIndex.HasValue?r.InterfaceIndex==vpnInterfaceIndex.Value:r.IsVpn;
         if(routes.Count==0)return new(ResultState.Unknown,"No IPv4 route table was collected.",evidence);
-        if(!routes.Any(Tunnel))return new(ResultState.Unknown,"The active tunnel interface could not be identified. Connect the VPN and collect again.",evidence);
+        if(!routes.Any(Tunnel))return new(ResultState.Unknown,"The engine has not verified a tunnel interface. Review observed adapter and route evidence separately; missing status alone does not mean the VPN failed.",evidence);
         bool unknown=false,failed=false;
         foreach(var target in profile.PermittedNetworks.Where(s=>s!="0.0.0.0/0"))
         {

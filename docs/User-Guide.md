@@ -12,9 +12,9 @@ A VM needs a working network connection that can reach the VPN gateway. Download
 |---|---|
 | Dashboard | Connect/disconnect the selected profile and read the available status. |
 | Connections | Create, edit, import, export, or delete saved profiles. |
-| Server Config | Preview configuration examples and checklists for supported servers. Commands are not applied to routers automatically. Review every address and placeholder first. |
+| Server tools | Preview configuration examples and checklists for supported servers. Commands are not applied to routers automatically. Review every address and placeholder first. |
 | Diagnostics | Read this computer's adapters, routes, DNS details, logs, and available provider evidence. |
-| Dependencies | Find installed VPN clients and open their official download pages. |
+| VPN engines | Find installed VPN clients and open their official download pages. You only need the engine your profile uses. |
 | Settings | Manage lab/developer modes, log retention, and certificate inventory. |
 | About | Read the app version and limitations. |
 | Lab 2 / Check-Off | Optional course topology and manual evidence checklists, visible in Lab Mode. |
@@ -32,12 +32,12 @@ A VM needs a working network connection that can reach the VPN gateway. Download
 
 ## Create your first profile
 
-1. In **Dependencies**, click **Refresh detection**. Install only the official client your VPN needs.
+1. In **VPN engines**, click **Refresh detection**. Install only the official client your VPN needs.
 2. In **Connections**, edit **My VPN** or choose **New profile**.
 3. Enter a name, VPN type, engine, gateway, and authentication settings from your administrator.
 4. If required, click **Browse configuration** and choose the provided client file.
 5. Set the expected split/full policy and private network ranges. For imported or external profiles, the actual VPN settings must also implement that policy.
-6. Click **Save profile → Validate → Connect**.
+6. Click **Save profile → Check settings**. Then choose **Connect**, or **Open NCP / Open Shrew** for an external client.
 7. Finish any client sign-in. Then test a known private host or service.
 8. Click **Diagnostics → Run diagnostics** and compare the observed routes with the expected policy.
 
@@ -59,11 +59,17 @@ WireGuard needs valid keys, addresses, and peer settings. A recent handshake is 
 
 Configure the actual VPN inside the external program. The console does not transfer its password or PSK to that program.
 
-For Shrew, import a valid `.vpn` file in VPN Access Manager, then enter its exact site name under **Named profile in external client**. Shrew's Windows 11 support is unverified.
+For Shrew, import a valid `.vpn` file in VPN Access Manager, then enter its exact site name under **Existing Shrew site name**. Shrew's Windows 11 support is unverified.
 
 For NCP, the console opens the monitor; select the profile and connect there. NCP is separately licensed.
 
-Both providers can remain **UNKNOWN** in the console even when their own windows show a state. Verify the client, routes, and target access. Disconnect in the external client.
+The dashboard says **Managed in NCP** or **Managed in Shrew** because these clients own the connection. This label is not a connected/disconnected claim. The diagnostic report may still show provider state UNKNOWN.
+
+After connecting there, click **Check connection** on the dashboard. Windows-observed addresses and private routes appear separately, with the last check time. A private-route adapter must be up and unambiguously route the listed private networks before its address is displayed. This is useful evidence, not proof of authentication, encrypted traffic or private-host access. Disconnect in the external client.
+
+### Less clutter when you do not need details
+
+**Activity log · redacted** at the bottom opens the session log, filtering, copy and save controls. **Connection details & troubleshooting** expands engine limitations and provider details. The Diagnostics page has expandable route, server-output and full-report sections. **Connections → More profile actions** contains import/export, duplicate, reset and delete. Dropdown labels are simplified; stored profile values have not changed.
 
 ## Use the app on several VMs
 
@@ -77,7 +83,7 @@ Give each simultaneously active client the identity and address assigned by your
 
 | What you see | What to do next |
 |---|---|
-| Missing dependency | Open Dependencies and install the correct official client. Refresh detection afterward. |
+| Missing dependency | Open VPN engines and install the correct official client. Refresh detection afterward. |
 | Administrator rights required | Disconnect/close the app, then start it with Run as administrator for that action. |
 | Profile validation error | Read the named field. Confirm the gateway, VPN type, configuration path, and network ranges. |
 | Authentication failed | Check the selected authentication method, account, shared key/certificates, and server logs. Do not change every setting at once. |

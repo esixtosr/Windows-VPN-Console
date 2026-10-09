@@ -9,7 +9,30 @@ public sealed class ProviderTests
     {
         var providers=ProviderRegistry.CreateDefault(new());
         Assert.Equal(new[]{"mock","native","ncp","openvpn","shrew","wireguard"},providers.Select(p=>p.Id).OrderBy(x=>x));
-        foreach(var p in providers){var capabilities=await p.GetCapabilitiesAsync();Assert.Equal(p.Id,capabilities.Id);Assert.NotEmpty(capabilities.Protocols);var installation=await p.DetectInstallation();Assert.Equal(p.Id,installation.Id);}
+        foreach(var p in providers){var capabilities=await p.GetCapabilitiesAsync();Assert.Equal(p.Id,capabilities.Id);Assert.NotEmpty(capabilities.Protocols);Assert.NotEqual(ProviderIntegrationType.Unavailable,capabilities.IntegrationType);Assert.NotEqual(ProviderCapabilityFlags.None,capabilities.Flags);var installation=await p.DetectInstallation();Assert.Equal(p.Id,installation.Id);}
+    }
+    [Fact] public async Task InteractiveIpsecProvidersDoNotClaimManagedControl()
+    {
+        var providers=ProviderRegistry.CreateDefault(new()).ToDictionary(x=>x.Id);
+        var ncp=await providers["ncp"].GetCapabilitiesAsync();
+        var shrew=await providers["shrew"].GetCapabilitiesAsync();
+        Assert.Equal(ProviderIntegrationType.ExternalInteractive,ncp.IntegrationType);
+        Assert.Equal(ProviderIntegrationType.ExternalInteractive,shrew.IntegrationType);
+        Assert.False(ncp.Flags.HasFlag(ProviderCapabilityFlags.SupportsNativeDisconnect));
+        Assert.False(shrew.Flags.HasFlag(ProviderCapabilityFlags.SupportsNativeDisconnect));
+        Assert.True(ncp.Flags.HasFlag(ProviderCapabilityFlags.RequiresLicense));
+    }
+    [Fact] public async Task ManagedEnginesExposeControlAndInstallationRequirements()
+    {
+        var providers=ProviderRegistry.CreateDefault(new()).ToDictionary(x=>x.Id);
+        foreach(var id in new[]{"openvpn","wireguard"})
+        {
+            var capabilities=await providers[id].GetCapabilitiesAsync();
+            Assert.Equal(ProviderIntegrationType.ExternalManaged,capabilities.IntegrationType);
+            Assert.True(capabilities.Flags.HasFlag(ProviderCapabilityFlags.SupportsNativeConnect));
+            Assert.True(capabilities.Flags.HasFlag(ProviderCapabilityFlags.SupportsNativeDisconnect));
+            Assert.True(capabilities.Flags.HasFlag(ProviderCapabilityFlags.RequiresExternalInstallation));
+        }
     }
     [Fact] public void WindowsNativeRejectsLegacyIpsecInsteadOfGuessing()
     {

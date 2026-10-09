@@ -2,6 +2,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 using CNIT455.VPN.Core;
 using CNIT455.VPN.ConfigGenerators;
@@ -33,6 +34,7 @@ public sealed partial class MainViewModel
             else foreach (var network in profile.PermittedNetworks) observed.Routes.Add(new(network, "0.0.0.0", 9, "Mock adapter", 1, 1, true));
         }
         observed.Routing = RouteAnalyzer.Analyze(profile, observed.Routes, connection.State == VpnState.Connected ? 9 : null);
+        observed.Observations = NetworkEvidenceClassifier.Observe(observed).ToList();
         observed.Findings = TroubleshootingAnalyzer.Analyze(observed).ToList();
         return observed;
     }
@@ -46,6 +48,8 @@ public sealed partial class MainViewModel
         void Check(bool condition, string message) { if (!condition) throw new InvalidOperationException("Smoke assertion failed: " + message); assertions.Add(message); }
         async Task Drain() => await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         Check(!LabMode && !Navigation.Contains("Lab 2") && Profiles.Count == 1 && !Profiles[0].IsLab && string.IsNullOrEmpty(Profiles[0].Gateway), "Fresh workspace starts in generic mode without lab endpoints");
+        Check(window.Icon is not null, "Application icon is loaded from the packaged resource");
+        Check(!VisualChildren<Expander>(window).Single(x => x.Name == "ActivityDrawer").IsExpanded, "Activity log starts collapsed");
         await window.CapturePageAsync(Path.Combine(screenDirectory, "generic-first-run.png"));
         LabMode = true; await SeedLabAsync();
         foreach (var page in Navigation.ToArray())
@@ -54,6 +58,25 @@ public sealed partial class MainViewModel
         }
         Check(visited.Count == 9, "All nine pages instantiated and captured");
         await CaptureDropdownSmokeAsync(window, screenDirectory);
+        var external = new VpnProfile { Name = "External client example", Protocol = VpnProtocol.Ikev2, ProviderId = "ncp", Gateway = "192.0.2.1", IsLab = false, PermittedNetworks = ["198.51.100.0/24"] };
+        Profiles.Add(external); SelectedProfile = external;
+        snapshot = new DiagnosticSnapshot
+        {
+            Profile = external with { PermittedNetworks = [.. external.PermittedNetworks] },
+            Status = new(VpnState.Unknown, "Simulated external client; no verified provider state"),
+            Routes = [new("0.0.0.0/0", "192.0.2.1", 3, "Ethernet", 10, 10), new("198.51.100.0/24", "0.0.0.0", 8, "Example virtual adapter", 1, 1)],
+            Adapters = [new(3, "Ethernet", "Simulated physical adapter", "Up", ["192.0.2.44"], [], []), new(8, "Example virtual adapter", "Simulated virtual adapter", "Up", ["10.254.0.10"], [], [])]
+        };
+        connection = snapshot.Status; RaiseProfileProperties(); SelectedPage = "Dashboard";
+        Check(ConnectLabel == "Open NCP" && StatusLabel == "Managed in NCP", "External client actions do not pretend to connect directly");
+        Check(TunnelIp == "10.254.0.10" && TunnelAdapter == "Example virtual adapter" && LocalAdapter == "Ethernet", "Dashboard displays observed external adapter and route evidence");
+        Check(connection.State == VpnState.Unknown && !HasActiveConnection, "Adapter evidence never promotes an external provider to Connected");
+        await window.CapturePageAsync(Path.Combine(screenDirectory, "external-observed-simulation.png"));
+        var width = window.Width; var height = window.Height; window.Width = 1000; window.Height = 720;
+        await window.CapturePageAsync(Path.Combine(screenDirectory, "compact-dashboard.png"));
+        SelectedPage = "Connections"; await window.CapturePageAsync(Path.Combine(screenDirectory, "compact-external-profile.png"));
+        Check(!VisualChildren<PasswordBox>(window).Any(), "External-client editor does not collect unused passwords");
+        window.Width = width; window.Height = height;
         GroupNumber = 41; await ApplyGroupAsync();
         Check(Topology.PublicNetwork == "44.104.41.0/24" && Topology.VyosDmz == "172.18.41.0/24", "Group number derives public and DMZ networks");
         var simulation = new VpnProfile { Name = "CI simulated connection", Protocol = VpnProtocol.L2tpIpsec, ProviderId = "mock", Gateway = "192.0.2.1", Username = "simulation", IsLab = false, PermittedNetworks = ["198.51.100.0/24"] };

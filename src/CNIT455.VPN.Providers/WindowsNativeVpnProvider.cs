@@ -11,7 +11,12 @@ public sealed class WindowsNativeVpnProvider(SecretRedactor? redactor = null) : 
     private readonly Dictionary<Guid,DateTimeOffset> connectedSince=[];
     public override string Id=>"native";
     public static string ConnectionName(VpnProfile profile)=>"CNIT455-"+profile.Id.ToString("N");
-    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken=default)=>Task.FromResult(new ProviderCapabilities(Id,"Windows native VPN",[VpnProtocol.L2tpIpsec,VpnProtocol.Ikev2,VpnProtocol.Sstp],[AuthenticationMode.PskAndUsername,AuthenticationMode.UsernamePassword,AuthenticationMode.ProviderDefault],true,true,true,false,"L2TP uses PSK + MSCHAPv2; SSTP uses MSCHAPv2 over TLS. IKEv2 uses Windows EAP authentication UI. Certificate/EAP policy must be configured by an administrator; this release does not auto-select certificates."));
+    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken=default)=>Task.FromResult(new ProviderCapabilities(Id,"Windows native VPN",[VpnProtocol.L2tpIpsec,VpnProtocol.Ikev2,VpnProtocol.Sstp],[AuthenticationMode.PskAndUsername,AuthenticationMode.UsernamePassword,AuthenticationMode.ProviderDefault],true,true,true,false,"L2TP uses PSK + MSCHAPv2; SSTP uses MSCHAPv2 over TLS. IKEv2 uses Windows EAP authentication UI. Certificate/EAP policy must be configured by an administrator; this release does not auto-select certificates.")
+    {
+        IntegrationType = ProviderIntegrationType.WindowsNative,
+        Flags = ProviderCapabilityFlags.SupportsNativeConnect | ProviderCapabilityFlags.SupportsNativeDisconnect | ProviderCapabilityFlags.SupportsEap | ProviderCapabilityFlags.SupportsPsk | ProviderCapabilityFlags.SupportsLiveStatus | ProviderCapabilityFlags.SupportsSplitTunnel,
+        CapabilityNotes = "Windows native IKEv2 support must not be treated as proof of PSK-server plus EAP-client compatibility for every gateway."
+    });
     public override Task<DependencyInfo> DetectInstallation(CancellationToken cancellationToken=default)=>Task.FromResult(ProviderEnvironment.Dependency(Id,"Windows native VPN",ProviderEnvironment.PowerShellPath,"Requires Windows VpnClient module and Remote Access Connection Manager (RasMan). Profiles belong to the current Windows account."));
     public override IReadOnlyList<ValidationIssue> ValidateProfile(VpnProfile profile)
     {

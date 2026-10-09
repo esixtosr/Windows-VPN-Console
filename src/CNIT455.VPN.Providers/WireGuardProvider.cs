@@ -16,7 +16,12 @@ public sealed class WireGuardProvider(SecretRedactor? redactor=null) : VpnProvid
     private static string TunnelName(VpnProfile profile)=>"cnit455-"+profile.Id.ToString("N")[..24];
     private static string? Executable=>ProviderEnvironment.FindProgram(@"WireGuard\wireguard.exe");
     private static string? WgExecutable=>ProviderEnvironment.FindProgram(@"WireGuard\wg.exe");
-    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken=default)=>Task.FromResult(new ProviderCapabilities(Id,"WireGuard for Windows",[VpnProtocol.WireGuard],[AuthenticationMode.PreSharedKey,AuthenticationMode.ProviderDefault],true,true,true,true,"Requires official WireGuard for Windows. Keypair always required; PSK is an additional peer secret. Connected requires a recent observed handshake. Installed tunnel services survive app exit; disconnect to remove them."));
+    public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken=default)=>Task.FromResult(new ProviderCapabilities(Id,"WireGuard for Windows",[VpnProtocol.WireGuard],[AuthenticationMode.PreSharedKey,AuthenticationMode.ProviderDefault],true,true,true,true,"Requires official WireGuard for Windows. Keypair always required; PSK is an additional peer secret. Connected requires a recent observed handshake. Installed tunnel services survive app exit; disconnect to remove them.")
+    {
+        IntegrationType = ProviderIntegrationType.ExternalManaged,
+        Flags = ProviderCapabilityFlags.SupportsNativeConnect | ProviderCapabilityFlags.SupportsNativeDisconnect | ProviderCapabilityFlags.SupportsProfileImport | ProviderCapabilityFlags.SupportsPsk | ProviderCapabilityFlags.SupportsLiveStatus | ProviderCapabilityFlags.SupportsTrafficCounters | ProviderCapabilityFlags.SupportsSplitTunnel | ProviderCapabilityFlags.SupportsIPv6 | ProviderCapabilityFlags.RequiresAdministrator | ProviderCapabilityFlags.RequiresExternalInstallation,
+        CapabilityNotes = "Uses official WireGuard service and wg.exe interfaces; username/password authentication is not part of WireGuard."
+    });
     public override Task<DependencyInfo> DetectInstallation(CancellationToken cancellationToken=default)=>Task.FromResult(ProviderEnvironment.Dependency(Id,"WireGuard",Executable,"Official wireguard.exe + wg.exe; administrator required. "+(WgExecutable is null?"wg.exe is missing.":"wg.exe found."),"https://www.wireguard.com/install/","winget install --id WireGuard.WireGuard --exact"));
     public override IReadOnlyList<ValidationIssue> ValidateProfile(VpnProfile profile)
     {

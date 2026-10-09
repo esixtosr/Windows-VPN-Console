@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1-preview.1 — interface refresh
+
+- New original shield icon, navigation icons, consistent dark dropdowns and clearer labels.
+- Compact dashboard, responsive two-column forms, collapsed activity log and optional technical detail sections.
+- External-client buttons say Open NCP / Open Shrew. Credentials and actual settings stay in those clients.
+- Display observed private-route adapter addresses separately from engine-reported state, with an explicit snapshot timestamp. Missing provider status is not presented as a connection failure.
+- Reject ambiguous, conflicting, default-only and down-adapter evidence when choosing an observed private-route adapter.
+- Simplify engine detection; show Detected / Not detected and keep the selected download item after refresh.
+- Preserve profile storage, provider IDs, remembered credentials and existing network configurations.
+- Extend the Windows smoke suite for the icon, collapsed logs, displayed dropdown labels, smaller windows and external-client observations. Test results are recorded in PROJECT_STATUS.md.
+
 ## 0.2.0 — 2026-10-08
 
 - Renamed the application and release package to Windows VPN Console / Windows-VPN.exe.

@@ -10,6 +10,26 @@ public enum ResultState { Unknown, Pass, Fail }
 public enum LogSeverity { Debug, Information, Warning, Error }
 public enum VpnStage { Initialization, Gateway, IkePhase1, Authentication, Xauth, Eap, Radius, Ldap, IkePhase2, Tunnel, AddressAssignment, Routing, Dns, Connectivity, Disconnect }
 public enum MockFailure { None, NoGateway, PskMismatch, XauthFailure, RadiusFailure, RouteFailure, DnsFailure, WireGuardHandshakeFailure }
+public enum ProviderIntegrationType { Integrated, WindowsNative, ExternalManaged, ExternalInteractive, Unavailable }
+[Flags]
+public enum ProviderCapabilityFlags
+{
+    None = 0,
+    SupportsNativeConnect = 1 << 0,
+    SupportsNativeDisconnect = 1 << 1,
+    SupportsProfileImport = 1 << 2,
+    SupportsEap = 1 << 3,
+    SupportsXauth = 1 << 4,
+    SupportsPsk = 1 << 5,
+    SupportsCertificateAuth = 1 << 6,
+    SupportsLiveStatus = 1 << 7,
+    SupportsTrafficCounters = 1 << 8,
+    SupportsSplitTunnel = 1 << 9,
+    SupportsIPv6 = 1 << 10,
+    RequiresAdministrator = 1 << 11,
+    RequiresExternalInstallation = 1 << 12,
+    RequiresLicense = 1 << 13
+}
 public sealed record VpnProfile
 {
     public Guid Id { get; init; } = Guid.NewGuid();
@@ -50,7 +70,13 @@ public sealed class VpnSecrets
 }
 public sealed record VpnLogEvent(DateTimeOffset Timestamp, LogSeverity Severity, string Provider, VpnStage Stage, string Message);
 public sealed record ValidationIssue(string Field, string Message, bool IsError = true);
-public sealed record ProviderCapabilities(string Id, string DisplayName, IReadOnlyList<VpnProtocol> Protocols, IReadOnlyList<AuthenticationMode> AuthenticationModes, bool CanConnect, bool CanDisconnect, bool CanStreamLogs, bool RequiresAdministrator, string Limitations = "");
+public sealed record ProviderCapabilities(string Id, string DisplayName, IReadOnlyList<VpnProtocol> Protocols, IReadOnlyList<AuthenticationMode> AuthenticationModes, bool CanConnect, bool CanDisconnect, bool CanStreamLogs, bool RequiresAdministrator, string Limitations = "")
+{
+    public ProviderIntegrationType IntegrationType { get; init; } = ProviderIntegrationType.Unavailable;
+    public ProviderCapabilityFlags Flags { get; init; } = ProviderCapabilityFlags.None;
+    public string Licensing { get; init; } = "None";
+    public string CapabilityNotes { get; init; } = "";
+}
 public sealed record DependencyInfo(string Id, string Name, bool Installed, string? ExecutablePath, string? Version, string Details, string? DownloadUrl = null, string? InstallCommand = null);
 public sealed record VpnStatus(VpnState State, string Message, string? TunnelIp = null, string? InterfaceName = null, DateTimeOffset? ConnectedSince = null, IReadOnlyDictionary<string,string>? Details = null);
 public sealed record ProviderResult(bool Success, string Message, VpnStatus? Status = null);
@@ -59,6 +85,7 @@ public sealed record RouteEntry(string Destination, string NextHop, int Interfac
 public sealed record NetworkAdapterInfo(int Index, string Name, string Description, string Status, IReadOnlyList<string> Addresses, IReadOnlyList<string> DnsServers, IReadOnlyList<string> Gateways);
 public sealed record RouteAnalysis(ResultState Result, string Summary, IReadOnlyList<string> Evidence);
 public sealed record Finding(string Category, ResultState Result, string Summary, string NextChecks);
+public sealed record DiagnosticObservation(string Category, ResultState Result, string Summary, string Evidence, string Confidence = "Observed");
 public sealed record CheckoffItem(string Id, string Text, ResultState Result = ResultState.Unknown, string Evidence = "");
 public sealed record AccessRule(string Network, string Policy, string Reason);
 public sealed class DiagnosticSnapshot
@@ -73,6 +100,7 @@ public sealed class DiagnosticSnapshot
     public List<NetworkAdapterInfo> Adapters { get; set; } = [];
     public List<DependencyInfo> Dependencies { get; set; } = [];
     public List<VpnLogEvent> Logs { get; set; } = [];
+    public List<DiagnosticObservation> Observations { get; set; } = [];
     public List<Finding> Findings { get; set; } = [];
     public RouteAnalysis Routing { get; set; } = new(ResultState.Unknown, "Not measured", []);
     public ResultState GatewayReachable { get; set; }

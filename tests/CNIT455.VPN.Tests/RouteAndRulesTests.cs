@@ -23,4 +23,27 @@ public sealed class RouteAndRulesTests
         Assert.Contains(TroubleshootingAnalyzer.Analyze(snapshot),x=>x.Category=="TRANSPORT"&&x.Result==ResultState.Fail);
     }
     [Fact]public void MissingDataProducesUnknown(){Assert.All(TroubleshootingAnalyzer.Analyze(new()),f=>Assert.Equal(ResultState.Unknown,f.Result));}
+    [Fact]public void ExternalClientEvidenceKeepsProviderUnknownButReportsObservedRouteAndAddress()
+    {
+        var snapshot=new DiagnosticSnapshot
+        {
+            Profile=new VpnProfile{ProviderId="ncp",Protocol=VpnProtocol.Ikev2,TunnelMode=TunnelMode.Split,PermittedNetworks=["198.51.100.0/24"]},
+            Status=new(VpnState.Unknown,"NCP profile state is not exposed through a verified API."),
+            Routes=
+            [
+                new("0.0.0.0/0","192.0.2.1",3,"Ethernet",15,0),
+                new("198.51.100.0/24","0.0.0.0",8,"Local Area Connection",1,0)
+            ],
+            Adapters=
+            [
+                new(3,"Ethernet","Public NIC","Up",["192.0.2.44"],["1.1.1.1"],["192.0.2.1"]),
+                new(8,"Local Area Connection","NCP virtual adapter","Up",["10.254.0.10"],[],[])
+            ]
+        };
+        var observations=NetworkEvidenceClassifier.Observe(snapshot);
+        Assert.Contains(observations,x=>x.Category=="PROVIDER STATE"&&x.Result==ResultState.Unknown);
+        Assert.Contains(observations,x=>x.Category=="PROTECTED ROUTE"&&x.Result==ResultState.Pass&&x.Evidence.Contains("Local Area Connection"));
+        Assert.Contains(observations,x=>x.Category=="ASSIGNED ADDRESS"&&x.Result==ResultState.Pass&&x.Summary.Contains("10.254.0.10"));
+        Assert.Contains(observations,x=>x.Category=="INTERNET ROUTE"&&x.Result==ResultState.Pass&&x.Evidence.Contains("Ethernet"));
+    }
 }

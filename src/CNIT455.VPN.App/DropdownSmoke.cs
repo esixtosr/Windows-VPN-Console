@@ -23,6 +23,8 @@ public sealed partial class MainViewModel
         var previousTemplate = ServerOptions.Template;
         var previousAuthentication = ServerOptions.Authentication;
         var previousFocus = Keyboard.FocusedElement;
+        var activity = VisualChildren<Expander>(window).Single(x => x.Name == "ActivityDrawer");
+        var previousActivity = activity.IsExpanded;
         async Task Drain() => await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         ComboBox Field(string name) => VisualChildren<ComboBox>(window).Single(x => AutomationProperties.GetName(x) == name);
 
@@ -39,8 +41,10 @@ public sealed partial class MainViewModel
             })
                 await CaptureDropdownAsync(Field(label), "dropdown-" + name, directory, Drain);
 
+            activity.IsExpanded = true; await Drain();
             var logFilter = VisualChildren<ComboBox>(window).Single(x => x.GetBindingExpression(Selector.SelectedItemProperty)?.ParentBinding.Path.Path == nameof(LogFilter));
             await CaptureDropdownAsync(logFilter, "dropdown-log-filter", directory, Drain);
+            activity.IsExpanded = previousActivity;
 
             ServerOptions.Template = ServerTemplate.WireGuardSiteToSite;
             ServerOptions.Authentication = AuthBackend.Radius;
@@ -57,6 +61,7 @@ public sealed partial class MainViewModel
             ServerOptions.Authentication = previousAuthentication;
             SelectedProfile = previousProfile;
             SelectedPage = previousPage;
+            activity.IsExpanded = previousActivity;
             await Drain();
             if (previousFocus is UIElement { IsVisible: true, IsEnabled: true } focus) Keyboard.Focus(focus);
         }
@@ -73,6 +78,11 @@ public sealed partial class MainViewModel
             combo.IsDropDownOpen = false;
             Keyboard.ClearFocus();
             await drain();
+            if (combo.SelectedItem is null) throw new InvalidOperationException("Dropdown has no selection: " + name);
+            var expected = string.IsNullOrEmpty(combo.DisplayMemberPath) ? DisplayLabels.For(combo.SelectedItem)
+                : combo.SelectedItem.GetType().GetProperty(combo.DisplayMemberPath)?.GetValue(combo.SelectedItem)?.ToString();
+            if (string.IsNullOrWhiteSpace(expected) || !VisualChildren<TextBlock>(combo).Any(t => t.Text == expected))
+                throw new InvalidOperationException("Dropdown selected label is not visible: " + name);
             CaptureElement(combo, Path.Combine(directory, name + "-closed.png"));
             combo.Focus();
             Keyboard.Focus(combo);

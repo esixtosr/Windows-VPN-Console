@@ -10,6 +10,7 @@ public sealed class DiagnosticFormatter(SecretRedactor redactor)
         text.AppendLine($"Application: Windows VPN Console {d.AppVersion}\nCaptured: {d.CapturedAt:O}\nWindows/OS: {d.OsVersion}\nAdministrator: {d.IsAdministrator}\nVPN: {d.Profile.Protocol}\nProvider: {d.Profile.ProviderId}\nGateway: {d.Profile.Gateway}\nExpected networks: {string.Join(", ",d.Profile.PermittedNetworks)}\nPolicy: {d.Profile.TunnelMode} / {d.Profile.LabPolicy}\nAuthentication workflow: {d.Profile.AuthBackend}");
         if(d.Profile.ProviderId=="mock")text.AppendLine("SIMULATED PROVIDER — test data is not evidence of a real VPN.");
         text.AppendLine($"\nCONNECTIVITY\nGateway ICMP response: {d.GatewayReachable.ToString().ToUpperInvariant()} (no reply is UNKNOWN)\n\nNEGOTIATION\nTunnel: {d.Status.State}\nProvider observation: {d.Status.Message}\nAssigned address: {d.Status.TunnelIp??"UNKNOWN"}\nTunnel interface: {d.Status.InterfaceName??"UNKNOWN"}\nIKE / PSK / XAUTH / Phase 2: UNKNOWN unless explicitly reported in the logs below.");
+        text.AppendLine("\nOBSERVED NETWORK EVIDENCE");foreach(var o in d.Observations)text.AppendLine($"{o.Category}: {o.Result} — {o.Summary}\nEvidence: {o.Evidence}\nConfidence: {o.Confidence}");
         text.AppendLine($"\nROUTING\n{d.Routing.Result}: {d.Routing.Summary}");foreach(var line in d.Routing.Evidence)text.AppendLine(line);
         text.AppendLine("\nACTUAL ROUTES");foreach(var r in d.Routes)text.AppendLine(RouteAnalyzer.Describe(r));
         text.AppendLine("\nINTERFACES");text.AppendLine(FormatInterfaces(d));

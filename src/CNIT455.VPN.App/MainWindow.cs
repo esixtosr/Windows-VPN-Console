@@ -19,32 +19,40 @@ public sealed class MainWindow : Window
     {
         this.model = model;
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/Windows-VPN;component/Theme.xaml", UriKind.Relative) });
-        DataContext = model; Title = "Windows VPN Console"; Width = 1360; Height = 960; MinWidth = 1080; MinHeight = 760; WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        var root = new Grid(); root.ColumnDefinitions.Add(new() { Width = new GridLength(210) }); root.ColumnDefinitions.Add(new());
-        var side = new DockPanel { Margin = new Thickness(18, 24, 14, 18) };
-        var brand = new StackPanel { Margin = new Thickness(8, 0, 0, 28) };
-        brand.Children.Add(new TextBlock { Text = "WINDOWS", FontSize = 24, FontWeight = FontWeights.Bold, Foreground = Ui.Brush("#5DE2C2") });
-        brand.Children.Add(new TextBlock { Text = "VPN CONSOLE", FontSize = 12, Margin = new Thickness(1, 5, 0, 0), Foreground = Ui.Brush("#A8BBCC") });
+        DataContext = model; Title = "Windows VPN Console";
+        Width = Math.Min(1280, SystemParameters.WorkArea.Width); Height = Math.Min(880, SystemParameters.WorkArea.Height);
+        MinWidth = Math.Min(980, SystemParameters.WorkArea.Width); MinHeight = Math.Min(640, SystemParameters.WorkArea.Height);
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Windows-VPN;component/Assets/app.ico"));
+        var root = new Grid(); root.ColumnDefinitions.Add(new() { Width = new GridLength(206) }); root.ColumnDefinitions.Add(new());
+        var side = new DockPanel { Margin = new Thickness(16, 24, 16, 18) };
+        var brand = new StackPanel { Margin = new Thickness(10, 0, 0, 28) };
+        brand.Children.Add(new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Windows-VPN;component/Assets/app-icon.png")), Width = 44, Height = 44, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 12) });
+        brand.Children.Add(new TextBlock { Text = "VPN Console", FontSize = 21, FontWeight = FontWeights.SemiBold, Foreground = Ui.Brush("#F1F5F9") });
+        brand.Children.Add(new TextBlock { Text = "FOR WINDOWS", FontSize = 10, Margin = new Thickness(1, 5, 0, 0), Foreground = Ui.Brush("#88A3BC") });
         DockPanel.SetDock(brand, Dock.Top); side.Children.Add(brand);
-        var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "unknown";
-        var footer = new StackPanel(); footer.Children.Add(Ui.Text($"v{version}  /  WINDOWS", 11, "#A8BBCC")); footer.Children.Add(Ui.Text("Your secrets stay local.", 11, "#A8BBCC")); DockPanel.SetDock(footer, Dock.Bottom); side.Children.Add(footer);
-        var nav = new ListBox { ItemsSource = model.Navigation }; nav.SetBinding(IsEnabledProperty, Ui.Bind(nameof(model.CanEdit), false)); nav.SetBinding(ListBox.SelectedItemProperty, Ui.Bind(nameof(model.SelectedPage))); AutomationProperties.SetName(nav, "Primary navigation"); side.Children.Add(nav);
-        var sideBorder = new Border { Background = Ui.Brush("#121E2A"), BorderBrush = Ui.Brush("#2B3A4B"), BorderThickness = new Thickness(0, 0, 1, 0), Child = side }; root.Children.Add(sideBorder);
-        var work = new Grid { Margin = new Thickness(28, 24, 28, 16) }; work.RowDefinitions.Add(new() { Height = GridLength.Auto }); work.RowDefinitions.Add(new()); work.RowDefinitions.Add(new() { Height = GridLength.Auto }); work.RowDefinitions.Add(new() { Height = new GridLength(6) }); work.RowDefinitions.Add(new() { Height = new GridLength(185), MinHeight = 95 }); Grid.SetColumn(work, 1); root.Children.Add(work);
-        var header = new Grid { Margin = new Thickness(0, 0, 0, 22) }; header.ColumnDefinitions.Add(new()); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        var titles = new StackPanel(); titles.Children.Add(Ui.BoundText(nameof(model.ModeLabel), 11, "#5DE2C2")); titles.Children.Add(Ui.BoundText(nameof(model.SelectedPage), 30, "#F1F5F9", FontWeights.SemiBold)); titles.Children.Add(Ui.BoundText(nameof(model.PageDescription), 13, "#A8BBCC")); header.Children.Add(titles);
-        var state = new Border { Background = Ui.Brush("#1A303A"), CornerRadius = new CornerRadius(7), Padding = new Thickness(15, 10, 15, 10), VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(20, 4, 0, 0) }; state.Child = Ui.BoundText(nameof(model.ConnectionText), 12, "#87F4D9", FontWeights.SemiBold); Grid.SetColumn(state, 1); header.Children.Add(state); work.Children.Add(header);
+        var footer = new StackPanel { Margin = new Thickness(10, 12, 0, 0) };
+        footer.Children.Add(Ui.Text("Your secrets stay local.", 11, "#A8BBCC"));
+        footer.Children.Add(Ui.Text($"v{DisplayLabels.Version}", 10, "#8098AE")); DockPanel.SetDock(footer, Dock.Bottom); side.Children.Add(footer);
+        var nav = new ListBox { ItemsSource = model.Navigation, ItemTemplate = Ui.NavigationTemplate() }; nav.SetBinding(IsEnabledProperty, Ui.Bind(nameof(model.CanEdit), false)); nav.SetBinding(ListBox.SelectedItemProperty, Ui.Bind(nameof(model.SelectedPage))); AutomationProperties.SetName(nav, "Primary navigation"); side.Children.Add(nav);
+        var sideBorder = new Border { Background = Ui.Brush("#101C2B"), BorderBrush = Ui.Brush("#26364A"), BorderThickness = new Thickness(0, 0, 1, 0), Child = side }; root.Children.Add(sideBorder);
+        var work = new Grid { Margin = new Thickness(26, 24, 22, 12) }; work.RowDefinitions.Add(new() { Height = GridLength.Auto }); work.RowDefinitions.Add(new()); work.RowDefinitions.Add(new() { Height = GridLength.Auto }); work.RowDefinitions.Add(new() { Height = GridLength.Auto }); Grid.SetColumn(work, 1); root.Children.Add(work);
+        var header = new Grid { Margin = new Thickness(0, 0, 0, 18) }; header.ColumnDefinitions.Add(new()); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        var titles = new StackPanel(); titles.Children.Add(Ui.BoundText(nameof(model.ModeLabel), 10, "#5DE2C2")); titles.Children.Add(Ui.BoundText(nameof(model.PageTitle), 28, "#F1F5F9", FontWeights.SemiBold)); titles.Children.Add(Ui.BoundText(nameof(model.PageDescription), 12, "#A8BBCC")); header.Children.Add(titles);
+        var state = new Border { Background = Ui.Brush("#203145"), CornerRadius = new CornerRadius(16), Padding = new Thickness(14, 8, 14, 3), VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(16, 4, 0, 0), MaxWidth = 200 };
+        var statusLabel = Ui.BoundText(nameof(model.StatusLabel), 12, "#C9D8E4", FontWeights.SemiBold);
+        statusLabel.SetBinding(TextBlock.ForegroundProperty, Ui.Bind(nameof(model.StatusColor), false));
+        state.Child = statusLabel; state.SetBinding(ToolTipProperty, Ui.Bind(nameof(model.ConnectionMessage), false)); Grid.SetColumn(state, 1); header.Children.Add(state); work.Children.Add(header);
         Grid.SetRow(page, 1); page.SetBinding(IsEnabledProperty, Ui.Bind(nameof(model.CanEdit), false)); work.Children.Add(page);
-        var notice = new Border { Background = Ui.Brush("#1D3040"), BorderBrush = Ui.Brush("#334A61"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(6), Padding = new Thickness(12, 8, 12, 8), Margin = new Thickness(0, 12, 0, 8), MaxHeight = 125 };
+        var notice = new Border { Background = Ui.Brush("#192C3D"), BorderBrush = Ui.Brush("#2C4358"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(7), Padding = new Thickness(12, 9, 12, 3), Margin = new Thickness(0, 8, 0, 6), MaxHeight = 90 };
         var noticeText = Ui.BoundText(nameof(model.StatusText), 12, "#D7E5F0"); AutomationProperties.SetLiveSetting(noticeText, AutomationLiveSetting.Polite); notice.Child = new ScrollViewer { Content = noticeText, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }; Grid.SetRow(notice, 2); work.Children.Add(notice);
-        var splitter = new GridSplitter { Height = 6, HorizontalAlignment = HorizontalAlignment.Stretch, Background = Ui.Brush("#263A4C"), ResizeDirection = GridResizeDirection.Rows, ResizeBehavior = GridResizeBehavior.PreviousAndNext }; Grid.SetRow(splitter, 3); work.Children.Add(splitter);
-        var log = new DockPanel { Margin = new Thickness(0, 10, 0, 0) }; var logActions = new DockPanel(); DockPanel.SetDock(logActions, Dock.Top);
-        var logTitle = Ui.Text("LIVE LOG  ·  REDACTED", 11, "#A8BBCC"); logTitle.VerticalAlignment = VerticalAlignment.Center; logActions.Children.Add(logTitle);
+        var log = new DockPanel { Height = 188 }; var logActions = new DockPanel(); DockPanel.SetDock(logActions, Dock.Top);
         var actions = Ui.Actions(Ui.Button("Pause", model.PauseLogsCommand), Ui.Button("Clear", model.ClearLogsCommand), Ui.Button("Copy", model.CopyLogsCommand), Ui.Button("Save", model.SaveLogsCommand)); ((Button)actions.Children[0]).SetBinding(ContentControl.ContentProperty, Ui.Bind(nameof(model.PauseLabel), false)); actions.HorizontalAlignment = HorizontalAlignment.Right; logActions.Children.Add(actions); log.Children.Add(logActions);
         var filterBar = Ui.Actions(Ui.Text("FILTER", 10, "#A8BBCC"), Ui.Select(nameof(model.LogFilter), new[] { "All", "Debug", "Information", "Warning", "Error" }), Ui.Input(nameof(model.LogSearch)));
         ((ComboBox)filterBar.Children[1]).Width = 135; ((TextBox)filterBar.Children[2]).Width = 230; ((TextBox)filterBar.Children[2]).Margin = new Thickness(10, 0, 0, 0); ((TextBox)filterBar.Children[2]).ToolTip = "Search this session's redacted log";
         DockPanel.SetDock(filterBar, Dock.Top); log.Children.Add(filterBar);
-        var logBox = Ui.Output(nameof(model.LogText), 11); logBox.TextChanged += (_, _) => { if (!model.LogsPaused) logBox.ScrollToEnd(); }; log.Children.Add(logBox); Grid.SetRow(log, 4); work.Children.Add(log);
+        var logBox = Ui.Output(nameof(model.LogText), 11); logBox.TextChanged += (_, _) => { if (!model.LogsPaused) logBox.ScrollToEnd(); }; log.Children.Add(logBox);
+        var drawer = Ui.Disclosure("Activity log · redacted", log); drawer.Name = "ActivityDrawer"; drawer.Margin = new Thickness(0); Grid.SetRow(drawer, 3); work.Children.Add(drawer);
         Content = root; model.PropertyChanged += ModelChanged; RefreshPage();
         Closing += OnClosing;
     }
@@ -98,11 +106,25 @@ internal static class Ui
     internal static Border Card(string title, params UIElement[] children)
     {
         var stack = new StackPanel(); if (title.Length > 0) stack.Children.Add(Text(title, 16, "#EDF5FA", FontWeights.SemiBold)); foreach (var child in children) stack.Children.Add(child);
-        return new Border { Background = Brush("#182330"), BorderBrush = Brush("#2B3A4B"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(9), Padding = new Thickness(20), Margin = new Thickness(0, 0, 0, 15), Child = stack };
+        return new Border { Background = Brush("#162334"), BorderBrush = Brush("#2C3D50"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(12), Padding = new Thickness(20), Margin = new Thickness(0, 0, 0, 14), Child = stack };
     }
     internal static FrameworkElement Two(UIElement left, UIElement right, double leftWeight = 1, double rightWeight = 1)
     {
-        var grid = new Grid(); grid.ColumnDefinitions.Add(new() { Width = new GridLength(leftWeight, GridUnitType.Star) }); grid.ColumnDefinitions.Add(new() { Width = new GridLength(16) }); grid.ColumnDefinitions.Add(new() { Width = new GridLength(rightWeight, GridUnitType.Star) }); grid.Children.Add(left); Grid.SetColumn(right, 2); grid.Children.Add(right); return grid;
+        var grid = new Grid(); grid.ColumnDefinitions.Add(new() { Width = new GridLength(leftWeight, GridUnitType.Star) }); grid.ColumnDefinitions.Add(new() { Width = new GridLength(16) }); grid.ColumnDefinitions.Add(new() { Width = new GridLength(rightWeight, GridUnitType.Star) }); grid.Children.Add(left); Grid.SetColumn(right, 2); grid.Children.Add(right);
+        var stacked = false;
+        grid.SizeChanged += (_, _) =>
+        {
+            var compact = grid.ActualWidth < 620;
+            if (compact == stacked) return;
+            stacked = compact; grid.RowDefinitions.Clear();
+            if (compact)
+            {
+                grid.RowDefinitions.Add(new() { Height = GridLength.Auto }); grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+                Grid.SetColumnSpan(left, 3); Grid.SetColumnSpan(right, 3); Grid.SetColumn(right, 0); Grid.SetRow(right, 1);
+            }
+            else { Grid.SetColumnSpan(left, 1); Grid.SetColumnSpan(right, 1); Grid.SetColumn(right, 2); Grid.SetRow(right, 0); }
+        };
+        return grid;
     }
     internal static TextBox Input(string path, bool multiline = false)
     {
@@ -123,9 +145,37 @@ internal static class Ui
     internal static ComboBox Select(string path, System.Collections.IEnumerable items, string? display = null, string? value = null)
     {
         var combo = new ComboBox { ItemsSource = items }; if (display is not null) combo.DisplayMemberPath = display;
+        else
+        {
+            var label = new FrameworkElementFactory(typeof(TextBlock));
+            label.SetBinding(TextBlock.TextProperty, new Binding { Converter = DisplayLabelConverter.Instance });
+            label.SetValue(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis);
+            label.SetValue(TextBlock.TextWrappingProperty, TextWrapping.NoWrap);
+            combo.ItemTemplate = new DataTemplate { VisualTree = label };
+        }
         if (value is null) combo.SetBinding(ComboBox.SelectedItemProperty, Bind(path)); else { combo.SelectedValuePath = value; combo.SetBinding(ComboBox.SelectedValueProperty, Bind(path)); } return combo;
     }
     internal static CheckBox Check(string label, string path) { var check = new CheckBox { Content = label }; check.SetBinding(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty, Bind(path)); return check; }
+    internal static Button BoundButton(string labelPath, System.Windows.Input.ICommand command, bool primary = false)
+    {
+        var button = Button("", command, primary); button.SetBinding(ContentControl.ContentProperty, Bind(labelPath, false));
+        if (labelPath == "ConnectLabel") button.SetBinding(UIElement.IsEnabledProperty, Bind("CanStartConnection", false));
+        button.SetBinding(AutomationProperties.NameProperty, Bind(labelPath, false)); return button;
+    }
+    internal static Expander Disclosure(string title, params UIElement[] children)
+    {
+        var expander = new Expander { Header = title, Content = Stack(children), Margin = new Thickness(0, 0, 0, 10) };
+        AutomationProperties.SetName(expander, title); return expander;
+    }
+    internal static DataTemplate NavigationTemplate()
+    {
+        var row = new FrameworkElementFactory(typeof(StackPanel)); row.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+        var icon = new FrameworkElementFactory(typeof(TextBlock)); icon.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Segoe MDL2 Assets"));
+        icon.SetValue(TextBlock.FontSizeProperty, 15.0); icon.SetValue(FrameworkElement.WidthProperty, 28.0);
+        icon.SetBinding(TextBlock.TextProperty, new Binding { Converter = new NavigationGlyphConverter() }); row.AppendChild(icon);
+        var label = new FrameworkElementFactory(typeof(TextBlock)); label.SetBinding(TextBlock.TextProperty, new Binding { Converter = DisplayLabelConverter.Instance }); row.AppendChild(label);
+        return new DataTemplate { VisualTree = row };
+    }
     internal static DataGrid Table(string path, params (string title, string property, double width)[] columns)
     {
         var grid = new DataGrid { IsReadOnly = true, MaxHeight = 350 }; grid.SetBinding(ItemsControl.ItemsSourceProperty, Bind(path, false));

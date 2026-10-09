@@ -11,6 +11,18 @@
 ## Current phase
 v0.2.0 software acceptance completed as Windows VPN Console, with a beginner README/user guide, general-purpose first-run defaults, and optional lab mode. Existing storage and provider identifiers remain compatible. The tag workflow repeats acceptance and publishes the public portable download. Live lab/server acceptance remains an explicit external verification task.
 
+v0.2.1-preview.1 focuses on interface cleanup and truthful network evidence. Independent IKEv2 engine work is deferred at the user's request. Earlier v1.0.0 capability/compatibility groundwork remains; this is not a v1.0.0 release.
+
+## Interface preview — 2026-10-09
+- Original multi-size shield icon embedded in the EXE and WPF window; vector source and repeatable asset generator included.
+- Smaller shell, navigation icons, dark dropdowns, friendly enum labels, responsive forms, collapsed technical details and activity log.
+- External clients retain ownership of authentication and connection control. The editor no longer collects unused secrets or shows Windows-only IKEv2 guidance for NCP.
+- Dashboard separates observed private-route address/interface evidence from provider status and shows when diagnostics were collected. Equal-cost routes, conflicting subroutes, missing targets and down adapters do not select a misleading address.
+- Local Release cross-build: zero warnings/errors. Managed tests: 136 passed; two Windows-only integration checks skipped on macOS. Windows UI/portable smoke checks pending for this preview.
+- Public branch upload was blocked by the safety review pending explicit user approval. Nothing was pushed and the stable release was not changed. The local preview ZIP is cross-built; it must not be described as Windows-runtime or visually verified until those checks run.
+- User-supplied screenshot reports NCP Connection established. Their local diagnostic report contains a private adapter address and a specific private-network route with a separate Internet interface. This supports a successful external-client connection report, not independently verified private-host access or encryption. No live reports, credentials or screenshots are packaged.
+- No router, NCP profile, authentication mode or saved-user-data migration is performed by this UI update.
+
 ## v0.2.0 validation — 2026-10-08
 - Windows CI https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551 at checkpoint `10d11d4`: **122/122 tests PASS**, no skipped tests.
 - Normal-build and extracted `Windows-VPN.exe` smoke runs: **34 assertions PASS** each, including a fresh generic workspace with no prefilled lab endpoint, optional lab workflows, and all existing provider/mock/redaction checks.
@@ -43,7 +55,7 @@ v0.2.0 software acceptance completed as Windows VPN Console, with a beginner REA
 
 ## Known limits / not validated
 - No actual L2TP/IPsec, OpenVPN or WireGuard handshake, lab server reachability, AD authentication or encrypted packet flow was tested. Those require the user's Windows 11 VM, installed engines, endpoints and credentials.
-- Shrew and NCP vendor launches were not tested on installed products. Shrew has no verified Windows 11 support; both adapters are explicit interactive handoffs with UNKNOWN unobserved state. They do not terminate unrelated processes.
+- NCP launch and connection were reported by the user on their installed client; no automated profile-scoped NCP status/control API is verified. Shrew launch remains untested on an installed product. Both remain interactive handoffs and do not terminate unrelated processes.
 - No reviewed VyOS 1.4/1.5 CLI recipe exists here for legacy PSK + IKEv1/XAUTH mobile access; obtain the exact course image/configuration. The app does not modify generated strongSwan files.
 - Native IKEv2 uses Windows EAP UI; automatic client-certificate selection/policy provisioning is not implemented. OpenVPN rejects unsafe imports, encrypted private-key prompts and unsupported MFA/challenges.
 - IPv4 route policy does not prove IPv6 protection, DNS leakage behavior, target authorization or encryption. Manual checkoff entries are attestations.

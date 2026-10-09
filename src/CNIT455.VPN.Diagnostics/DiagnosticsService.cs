@@ -8,7 +8,7 @@ public sealed class DiagnosticsService(SecretRedactor redactor)
 {
     public async Task<DiagnosticSnapshot> CollectAsync(VpnProfile profile,IVpnProvider provider,IEnumerable<VpnLogEvent> logs,string serverOutput="",CancellationToken cancellationToken=default)
     {
-        var snapshot=new DiagnosticSnapshot { Profile=profile with {}, Logs=logs.TakeLast(1000).Select(l=>l with{Message=redactor.Redact(l.Message)}).ToList(),ServerOutput=redactor.Redact(serverOutput),IsAdministrator=IsAdministrator() };
+        var snapshot=new DiagnosticSnapshot { Profile=profile with { PermittedNetworks=[..profile.PermittedNetworks], ForbiddenNetworks=[..profile.ForbiddenNetworks] }, Logs=logs.TakeLast(1000).Select(l=>l with{Message=redactor.Redact(l.Message)}).ToList(),ServerOutput=redactor.Redact(serverOutput),IsAdministrator=IsAdministrator() };
         try{snapshot.Status=await provider.GetStatusAsync(profile,cancellationToken);snapshot.Dependencies.Add(await provider.DetectInstallation(cancellationToken));snapshot.ProviderDiagnostics=redactor.Redact(await provider.GetDiagnosticsAsync(profile,cancellationToken));}catch(Exception e) when(e is not OperationCanceledException){snapshot.CollectionNotes+="Provider query: "+redactor.Redact(e.Message)+"\n";}
         foreach(var adapter in NetworkInterface.GetAllNetworkInterfaces())
         {
@@ -50,6 +50,7 @@ public sealed class DiagnosticsService(SecretRedactor redactor)
             try {using var ping=new Ping();var reply=await ping.SendPingAsync(profile.Gateway,TimeSpan.FromSeconds(2),cancellationToken:cancellationToken);snapshot.GatewayReachable=reply.Status==IPStatus.Success?ResultState.Pass:ResultState.Unknown;}
             catch(PingException){snapshot.GatewayReachable=ResultState.Unknown;}
         }
+        snapshot.Observations=NetworkEvidenceClassifier.Observe(snapshot).ToList();
         snapshot.Findings=TroubleshootingAnalyzer.Analyze(snapshot).ToList();
         return snapshot;
     }

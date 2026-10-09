@@ -1,0 +1,44 @@
+WINDOWS VPN CONSOLE — INTERFACE PREVIEW
+
+1. Copy this ZIP to your Windows 11 x64 computer or VM.
+2. Right-click the ZIP, choose Extract All, and open the extracted folder.
+3. Double-click Windows-VPN.exe. A separate .NET installation is not needed.
+
+UPGRADING
+Close the previous console before opening this copy. Extract to a new folder;
+keep the old copy for rollback. Use the same Windows account to keep your saved
+profiles and remembered credentials. Do not move imported VPN configuration files.
+This update does not rewrite NCP profiles or change your router configuration.
+
+WHAT'S NEW
+- Cleaner layout and a new shield icon in the window and executable.
+- Dark dropdowns, clearer labels, and advanced information tucked away.
+- Activity log is collapsed at the bottom. Click it when you need it.
+- VPN engines replaces the Dependencies page label.
+- NCP and Shrew buttons say Open NCP / Open Shrew.
+- Check connection shows observed Windows addresses and routes separately from
+  the engine's own status. A route or adapter is not proof of a working tunnel.
+
+IF YOU USE NCP
+1. Select the same saved profile in the console.
+2. Click Open NCP; select and connect the actual profile inside NCP.
+3. Return to the dashboard and click Check connection.
+4. Confirm your expected private address and network path, then test a private
+   host or service. Disconnect inside NCP when finished.
+
+NCP is still a separate licensed client. Managed in NCP does not mean connected
+or disconnected. This console does not collect NCP passwords or configure NCP.
+Never run several VPN clients against the same connection at once.
+
+Windows native VPN, WireGuard and OpenVPN have different integration limits.
+See Docs/User-Guide.md and PROJECT_STATUS.md for capabilities and test evidence.
+
+This is an unsigned preview, not a v1.0 release. If Windows asks about the
+publisher, verify the source and ZIP checksum; do not disable Windows security.
+No external VPN engine is included. There is no automatic update or installer.
+
+VALIDATION FOR THIS PREVIEW
+Release cross-build passed with no warnings or errors. All 136 cross-platform
+tests passed. Windows-only tests and rendered UI checks have not yet run for
+this preview; they require Windows or approval to upload the development branch
+for CI. Keep the earlier working app available while trying this copy.

@@ -18,7 +18,7 @@ public static class TroubleshootingAnalyzer
         if(snapshot.Routing.Result==ResultState.Fail || Error(VpnStage.Routing))result.Add(new("ROUTING",ResultState.Fail,snapshot.Routing.Result==ResultState.Fail?snapshot.Routing.Summary:"Route installation failed.",snapshot.Profile.Protocol==VpnProtocol.OpenVpn?"Check pushed routes or redirect-gateway settings and the actual interface metrics.":"Check Mode Config, split routes, AllowedIPs, interface metrics, return routes, site-to-site routing and NAT exemptions."));
         if(Error(VpnStage.Dns))result.Add(new("DNS",ResultState.Fail,"The provider reported a DNS failure.","Inspect tunnel DNS servers, suffix and reachability. Compare an IP address test with a hostname test."));
         if(Error(VpnStage.Connectivity) && snapshot.Status.State==VpnState.Connected)result.Add(new("FIREWALL / ROUTING",ResultState.Unknown,"A tunnel is up but destination response is missing.","Check destination host firewall, VPN firewall rules, return route, NAT exemption and site-to-site VPN. A timeout cannot distinguish these causes."));
-        if(result.Count==0)result.Add(new("OBSERVATION",ResultState.Unknown,"No specific failure stage is supported by the collected evidence.","Connect, reproduce the problem, collect provider logs and paste sanitized server output. Verify target hosts and public-interface captures separately."));
+        if(result.Count==0)result.Add(new("OBSERVATION",ResultState.Unknown,"No specific connection failure was identified by this check.","If using an external client, check its status there. Verify access to a private host separately; collect client and server logs only if a problem remains."));
         return result;
     }
 }
