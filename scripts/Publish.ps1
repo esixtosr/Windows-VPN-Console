@@ -1,4 +1,4 @@
-param([string]$Version = 'v0.1.1', [string]$OutputDirectory = 'artifacts')
+param([string]$Version = 'v0.2.0', [string]$OutputDirectory = 'artifacts')
 $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') { throw 'Version must be a semantic version prefixed v.' }
 $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -26,7 +26,7 @@ foreach ($package in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windo
         }
     }
 }
-$zip = Join-Path $outputRoot "CNIT455-VPN-Console-$Version-win-x64.zip"
+$zip = Join-Path $outputRoot "Windows-VPN-Console-$Version-win-x64.zip"
 Compress-Archive -Path (Join-Path $publish '*') -DestinationPath $zip -Force
 $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 "$hash  $([IO.Path]::GetFileName($zip))" | Set-Content (Join-Path $outputRoot 'SHA256SUMS.txt') -Encoding ascii

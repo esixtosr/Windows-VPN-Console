@@ -28,4 +28,4 @@ Executable discovery is constrained to Windows system folders and known product 
 
 ## Retention and recovery
 
-Data lives under `%LOCALAPPDATA%\CNIT455-VPN-Console`. Default log retention is 14 days. Use Clear Logs and disconnect before removing the portable app. Windows Credential Manager entries are separate from ZIP contents; disable Remember and save/remove the relevant stored entry when retiring a profile.
+Data lives under `%LOCALAPPDATA%\CNIT455-VPN-Console`; Windows VPN Console retains this original folder and credential identifiers so upgrades can reuse existing profiles and secrets. Default log retention is 14 days. Use Clear Logs and disconnect before removing the portable app. Windows Credential Manager entries are separate from ZIP contents; disable Remember and save/remove the relevant stored entry when retiring a profile.

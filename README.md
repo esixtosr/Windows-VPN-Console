@@ -1,92 +1,103 @@
-# CNIT 455 VPN Console
+# Windows VPN Console
 
-A portable Windows 11 x64 network administration utility for seven CNIT 45500 Lab 2 VPN scenarios and reusable VPN profiles. Built with C#, WPF, MVVM and .NET 10. It controls established VPN engines; it does not implement VPN cryptography.
+A free, portable tool for managing VPN profiles and checking network settings on Windows 11 x64.
 
-**Version 0.1.1** fixes unreadable dropdown selections in the dark interface. [Windows patch validation](https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37511988054) passed all **122 tests** and both **33-assertion** UI smoke runs; selected values and expanded menus were visually inspected. Details are recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md).
+Use it to save connections, start supported VPN clients, inspect routes, and collect a troubleshooting report. It connects to a VPN server you already have. It does not provide a VPN service or automatically monitor every machine in your network.
 
-The preceding **v0.1.0** [Windows validation](https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37385355364) passed **122 tests**, native L2TP profile/route provisioning and removal, Credential Manager storage, and **33 WPF runtime assertions** on both the normal build and extracted self-contained ZIP. External VPN engines were absent on the runner; their live launches, handshakes and real lab traffic remain unverified. See [acceptance details](docs/Acceptance.md).
+**[Download the latest Windows app](https://github.com/esixtosr/Windows-VPN-Console/releases/latest)** · [Easy user guide](docs/User-Guide.md) · [Troubleshooting](docs/User-Guide.md#when-something-goes-wrong)
 
-![Windows runtime screenshot showing the explicitly simulated Mock provider](docs/images/dashboard.png)
+## 1. Download and open it
 
-The screenshot uses the Mock provider; it is not a real VPN connection.
+1. Open the download link above on your Windows VM or PC. No GitHub account is needed.
+2. Under **Assets**, download **Windows-VPN-Console-v0.2.0-win-x64.zip**, or the Windows ZIP listed in the newest release.
+3. Right-click the ZIP and choose **Extract All**.
+4. Open the extracted folder and run **Windows-VPN.exe**.
 
-## Quick start
+That is the installation: extract and run. You do not need Git, Visual Studio, or a separate .NET installation. You can use the same release ZIP on multiple Windows VMs. Each VM keeps its own profiles and credentials.
 
-1. On Windows 11 x64, sign in to GitHub using an account with access to this private repository and open [Releases](https://github.com/esixtosr/CNIT455-VPN-Console/releases).
-2. Open the latest published release and expand **Assets**. Download `CNIT455-VPN-Console-v0.1.1-win-x64.zip` (or the matching ZIP for that release) and `SHA256SUMS.txt`. **Code > Download ZIP** and the **Source code** assets contain source files, not the runnable application.
-3. Optionally compare `Get-FileHash .\CNIT455-VPN-Console-v0.1.1-win-x64.zip -Algorithm SHA256` with the matching entry in `SHA256SUMS.txt`.
-4. Right-click the ZIP, choose **Extract All**, then open the extracted folder and run **CNIT455-VPN.exe**. This is a portable application with no installer. No Visual Studio, SDK, or separately installed .NET runtime is needed.
-5. Select Lab Mode, set the group number, confirm addresses, then choose a connection. Dependencies shows the required external engine.
-6. Start with Local Test authentication, collect diagnostics, then move server authentication to AD/RADIUS/LDAP. Use Check-Off to record evidence.
+Choose the named Windows ZIP, not **Source code** or **Code → Download ZIP**. Those contain development files. The app runs on Windows; there is no native Mac or Linux app.
 
-The executable is not code signed. Windows may show an unknown-publisher prompt. Confirm the repository and checksum before running. Do not disable Windows security protections.
+The executable is unsigned, so Windows may show an unknown-publisher message. Download from this repository and check the checksum if needed; do not turn off Windows security protections.
 
-## Why GitHub and how updates work
+## 2. Have your VPN details ready
 
-GitHub stores the source code and its change history, runs the Windows build and test workflow, and distributes versioned downloads through Releases. The downloaded application runs locally on your Windows computer; GitHub does not host your VPN or monitor your connections. You do not need Git installed, and the app does not need a GitHub login to run. Signing in is necessary to download from this private repository.
+Your VPN administrator or your own VPN server must supply:
 
-There is no automatic updater. To update, disconnect the active VPN, close the console, download the new release ZIP, and extract it to a separate folder. Run the new folder's `CNIT455-VPN.exe`; keep the old folder until you have checked the update.
+- The VPN type, such as L2TP/IPsec, IKEv2, OpenVPN, or WireGuard.
+- The server address, also called the **gateway**.
+- The required username/password, shared key, certificates, or configuration file.
+- Which private networks you should be able to reach.
 
-Saved profiles and settings remain in `%LOCALAPPDATA%\CNIT455-VPN-Console` for the same Windows user, outside the application folder. Imported OpenVPN, WireGuard, and other external configuration files are linked by their original paths, so keep those files in place. If you stored an imported configuration inside the old application folder, move it to a secure permanent location and update the profile's configuration path before deleting that folder.
+Do not guess these values. A saved profile alone cannot create a working VPN server.
 
-## Connections and dependencies
+## 3. Set up a connection
 
-| Provider | Protocols | Integration and limits |
+1. Open **Dependencies** and click **Refresh detection**. Install the required official client if it is missing.
+2. Open **Connections**. Edit **My VPN**, or click **New profile**.
+3. Give it a useful name, such as **Office VPN** or **Test VM VPN**.
+4. Choose the **VPN type** and matching **VPN engine**.
+5. Enter the gateway and the settings provided by your administrator. For OpenVPN or WireGuard, use **Browse configuration** to select a supported configuration file.
+6. Choose the expected tunnel policy: **Split** sends selected private networks through the VPN; **Full** sends Internet traffic through it too. Enter the permitted networks if required. External client settings must match this expectation.
+7. Click **Save profile**, then **Validate** to check the profile fields.
+8. Click **Connect**. Complete any Windows or external-client sign-in prompt.
+9. Open a known internal website, server, or other service to confirm access. **Validate** checks settings; it does not prove the VPN works.
+
+Some engine actions need administrator rights. If the app reports that requirement, close it and use **Run as administrator** for that action.
+
+## Which VPN engine do I need?
+
+| VPN type | What to use | What to know |
 |---|---|---|
-| Windows native | L2TP/IPsec, IKEv2, SSTP | Windows PowerShell VPN cmdlets and RAS APIs; only app-owned profiles are altered. No PPTP. |
-| OpenVPN Community | OpenVPN | Separately installed `openvpn.exe`; imported self-contained configs with a restricted directive set, owned process and local management channel. |
-| WireGuard for Windows | WireGuard | Separately installed `wireguard.exe`/`wg.exe`; tunnel services require administrator rights. |
-| Shrew Soft | Legacy mobile IPsec | Imported/named profiles and interactive launch. Its old releases have no verified Windows 11 support; status may remain UNKNOWN. No invented profile PSK encoding. |
-| NCP Secure Entry | External IPsec | Optional detection and manual-client handoff; no redistributable engine or unverified automation commands. |
-| Mock | Simulated stages and failures | Developer Mode only. Simulations are visibly labeled and are not lab evidence. |
+| L2TP/IPsec | Windows native VPN | Built into Windows. This adapter uses PSK and MSCHAPv2. |
+| IKEv2 or SSTP | Windows native VPN | Certificate trust/EAP settings may need administrator setup. |
+| OpenVPN | OpenVPN Community | Install separately and import a supported `.ovpn` file. OpenVPN Connect is a different client. |
+| WireGuard | WireGuard for Windows | Install separately; use a supported configuration. Service changes need administrator rights. |
+| External IPsec | Compatible Shrew Soft or NCP client | Configure, sign in, and disconnect inside that client. NCP requires its own license; Shrew's Windows 11 compatibility is unverified. |
+| Mock | Built-in simulation | Available in Developer Mode for UI practice. It does not create a real VPN. |
 
-The app detects paths, versions, privilege and engine limitations. It does not silently install VPN software. Official download links are provided. See [provider research](docs/Providers-Research.md) for the exact reviewed interfaces.
+Use **Dependencies → Open official download** for vendor links. These clients are not bundled with the app. Detailed restrictions are in the [user guide](docs/User-Guide.md) and [provider notes](docs/Providers-Research.md).
 
-## Lab Mode and Generic Mode
+## Check a connection or get help
 
-The built-in **CNIT 455 - Lab 2** topology derives public and VyOS DMZ addresses from a group number (default 33). All topology fields are editable. pfSense Remote is **192.168.4.0/24**; `192.168.5.0/24` produces a reserved-range warning. Confirm the different original/new router endpoints: the course specification uses the same VyOS external address for different scenarios.
+Open **Diagnostics → Run diagnostics** to collect local routes, adapters, DNS settings, and available VPN status. It does not test every remote machine.
 
-IPsec Mobile has Strict (VyOS Remote only), Extended (Remote plus HQ through WireGuard), and Custom route policies. The interface explains the conflicting course wording. Generic Mode removes the lab assumptions and enables arbitrary native IKEv2/SSTP, L2TP, OpenVPN, WireGuard and external IPsec profiles.
+**UNKNOWN** means the app does not have enough evidence. In particular, opening Shrew/NCP does not mean a tunnel connected. Check the external client and a real destination.
 
-Three site-to-site helpers provide reviewed configuration templates/checklists, NAT exclusions, capture guidance and manual checkoff evidence. The app never applies router/firewall configuration automatically. Unsupported VyOS versions and legacy XAUTH templates fail closed with an explanation.
+Use **Copy for ChatGPT** to copy a report, or **Export evidence ZIP** to save it. Copying does not upload anything. Reports hide recognized secrets, but addresses, usernames, and hostnames can remain. Read the report before sharing it, and never post passwords, private keys, or original secret-bearing VPN files in a public issue.
 
-## Diagnostics and Copy for ChatGPT
+## Update or move to another VM
 
-Collects relevant adapters, IP/DNS/gateway details, IPv4 routes, provider status, recent RAS events and normalized logs. Routing validation uses longest-prefix matching and route + interface metrics. An unidentifiable tunnel, ICMP timeout, ambiguous equal-cost route or absent protocol observation remains **UNKNOWN**. IPv6 and actual destination reachability require separate inspection.
+There is no automatic updater. Disconnect, close the old app, download the new Windows ZIP, and extract it to a new folder. Then run the new `Windows-VPN.exe`.
 
-**COPY FOR CHATGPT** creates sanitized plain text. Pasted server output remains in the session unless you explicitly export evidence. Checkoff ZIPs contain a summary, diagnostics, routes, interfaces, status, redacted logs, checkoff JSON and versions. Manual results are identified as user attestations. Captures are not automatically included.
+Existing users of **CNIT455 VPN Console v0.1.x** keep their saved profiles and settings when using the same Windows account. The old data-folder and credential identifiers remain for compatibility. Imported VPN files must stay at their recorded paths, or you must select their new locations.
 
-## Security and privacy
+For another VM, copy the release ZIP and extract it there. To reuse a profile, use **Connections → Export JSON**, then **Import JSON** on the other VM. Exported JSON does not contain passwords, PSKs, or private keys, and its imported-file path is cleared. Enter credentials and reselect the original configuration file on each VM. Do not share a WireGuard identity across active machines unless your VPN administrator explicitly designed that setup.
 
-No telemetry, analytics or cloud account is required. Profiles are JSON without password, PSK or private-key fields. Secrets are not remembered by default; optional storage uses Windows Credential Manager for the current user. Provider-managed tunnel state can require protected system storage; see [Security](docs/Security.md). Passwords are not supplied as command-line arguments. Imported provider configurations may already contain secrets: keep originals secure.
+## Optional lab mode
 
-Logs are sanitized before display, persistence, clipboard and export. PEM/inline credentials, sensitive labels, registered secrets and key-shaped strings are removed conservatively. Review exported diagnostics before sharing; IP addresses, hostnames and certificate metadata can remain visible. Logs live in `%LOCALAPPDATA%\CNIT455-VPN-Console\Logs` with 14-day default retention. Profiles and settings reside alongside Logs.
+New installations open in general-purpose mode. For the original CNIT 455 exercises, enable **Settings → Lab Mode**, save settings, and open **Lab 2**. Confirm the topology before adding lab profiles. Existing profiles are not rewritten when you change the group number. [Lab instructions](docs/Lab2-Guide.md)
 
-The app starts without requiring elevation. Some provider actions require administrator rights and report that requirement. It never disables Windows Firewall, weakens global IPsec policy, installs drivers silently or modifies unrelated adapters.
+## Verify a download
 
-## Build and test
-
-Requires .NET 10 SDK. A Windows machine is required to run WPF and provider integration.
+`SHA256SUMS.txt` contains the expected fingerprint of the release ZIP. In PowerShell, from your download folder:
 
 ```powershell
-dotnet restore CNIT455-VPN-Console.sln
-dotnet build CNIT455-VPN-Console.sln -c Release --no-restore
-dotnet test tests/CNIT455.VPN.Tests -c Release --no-build
-powershell -File scripts/Publish.ps1 -Version v0.1.1
+Get-FileHash .\Windows-VPN-Console-v0.2.0-win-x64.zip -Algorithm SHA256
 ```
 
-Core, generators, diagnostics and managed unit tests can also be built on macOS/Linux. Cross-compiling WPF uses `EnableWindowsTargeting`; a successful cross-build is not proof of Windows runtime behavior.
+Compare it with the matching entry in `SHA256SUMS.txt`. The values should match; capitalization does not matter. This checks file integrity, not whether a VPN connection works.
 
-## Release process
+## What has been tested?
 
-GitHub Actions builds on Windows, runs unit tests and a WPF startup/navigation smoke test, publishes a self-contained win-x64 executable, packages docs/presets, calculates SHA-256 and uploads artifacts. Pushing `v*` creates a GitHub Release from the same verified package. Tags and versions must match. No external VPN engines or course PDFs are bundled. See [Architecture](docs/Architecture.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+Windows CI checks the build, automated tests, native profile create/remove behavior, Windows Credential Manager, and normal/portable UI startup. The [acceptance record](docs/Acceptance.md) separates verified software behavior from live VPN checks. External client compatibility, real server authentication, routing, and encryption still need testing against your own environment.
 
-## Documentation
+## More information
 
-[Lab guide](docs/Lab2-Guide.md) · [Mobile IPsec](docs/IPsec-Mobile.md) · [L2TP](docs/L2TP.md) · [OpenVPN](docs/OpenVPN.md) · [WireGuard](docs/WireGuard.md) · [VyOS](docs/VyOS.md) · [pfSense](docs/pfSense.md) · [Diagnostics](docs/Diagnostics.md) · [Security](docs/Security.md)
+- [Easy user guide](docs/User-Guide.md): page-by-page help, errors, updates, and privacy.
+- [Security and local storage](docs/Security.md).
+- [Project status and validation](PROJECT_STATUS.md).
+- [Build and contribute](CONTRIBUTING.md).
 
-## Disclaimer and license
+GitHub holds the source code, build checks, and release downloads. The application and your VPN connections run locally on your computer.
 
-CNIT455 VPN Console is an independent educational/network administration utility. It is not affiliated with Purdue University, VyOS, Netgate/pfSense, OpenVPN, WireGuard, NCP, or Shrew Soft. No Purdue logos or laboratory PDFs are included.
-
-Original code is licensed under [MIT](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependencies and upstream references.
+MIT-licensed independent utility. Not affiliated with Microsoft, Purdue University, VyOS, Netgate/pfSense, OpenVPN, WireGuard, NCP, or Shrew Soft. External clients retain their own licenses. No course PDFs, VPN services, or commercial client binaries are included.

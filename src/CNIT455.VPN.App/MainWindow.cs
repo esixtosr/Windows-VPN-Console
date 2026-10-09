@@ -18,12 +18,12 @@ public sealed class MainWindow : Window
     public MainWindow(MainViewModel model)
     {
         this.model = model;
-        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/CNIT455-VPN;component/Theme.xaml", UriKind.Relative) });
-        DataContext = model; Title = "CNIT 455 VPN Console"; Width = 1360; Height = 960; MinWidth = 1080; MinHeight = 760; WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/Windows-VPN;component/Theme.xaml", UriKind.Relative) });
+        DataContext = model; Title = "Windows VPN Console"; Width = 1360; Height = 960; MinWidth = 1080; MinHeight = 760; WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var root = new Grid(); root.ColumnDefinitions.Add(new() { Width = new GridLength(210) }); root.ColumnDefinitions.Add(new());
         var side = new DockPanel { Margin = new Thickness(18, 24, 14, 18) };
         var brand = new StackPanel { Margin = new Thickness(8, 0, 0, 28) };
-        brand.Children.Add(new TextBlock { Text = "CNIT 455", FontSize = 24, FontWeight = FontWeights.Bold, Foreground = Ui.Brush("#5DE2C2") });
+        brand.Children.Add(new TextBlock { Text = "WINDOWS", FontSize = 24, FontWeight = FontWeights.Bold, Foreground = Ui.Brush("#5DE2C2") });
         brand.Children.Add(new TextBlock { Text = "VPN CONSOLE", FontSize = 12, Margin = new Thickness(1, 5, 0, 0), Foreground = Ui.Brush("#A8BBCC") });
         DockPanel.SetDock(brand, Dock.Top); side.Children.Add(brand);
         var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "unknown";

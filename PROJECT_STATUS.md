@@ -1,4 +1,4 @@
-# Project status
+# Windows VPN Console — project status
 
 ## Completed phases
 - .NET 10 solution and WPF MVVM application; nine pages, adaptive profiles, lab/generic modes and editable topology.
@@ -6,13 +6,18 @@
 - Secret-free JSON profiles, optional Windows Credential Manager storage, certificate metadata and redacted logs/clipboard/evidence.
 - IPv4 route validation, deterministic troubleshooting, all seven checkoff catalogs, source-reviewed VyOS/pfSense helpers, client templates and packet-capture guidance.
 - 122 automated tests; Windows WPF and extracted self-contained release smoke checks; documentation, screenshot, licensing, presets, CI and portable packaging.
-- Private repository: https://github.com/esixtosr/CNIT455-VPN-Console.
+- Repository destination: https://github.com/esixtosr/Windows-VPN-Console (public rebrand in progress).
 
 ## Current phase
-v0.1.1 patch acceptance completed. Generated dropdown text inherits the owning control's foreground instead of a global white override. Windows visual review verified readable selected values, disabled values and expanded menus. The tag workflow repeats the release gates before publishing. Live lab/server acceptance remains an explicit external verification task.
+Preparing v0.2.0 as Windows VPN Console with public downloads, a beginner README/user guide, general-purpose first-run defaults, and optional lab mode. Existing storage and provider identifiers remain compatible. Local/Windows validation and final public release verification are pending. Live lab/server acceptance remains an explicit external verification task.
+
+## Public release review — 2026-10-08
+- Reviewed tracked file names and scanned all 125 historical Git blobs for common credential-token, private-key-block and credential-URL patterns; no matches and no secret-bearing VPN files, key containers, captures or PDFs were found.
+- Scanned all nine existing workflow runs (22 available log files) using the same credential patterns; no matches were found.
+- Stored test data is synthetic; package screenshots are captured from the Mock provider. This is a targeted publication review, not a guarantee that arbitrary future files or logs are safe to publish.
 
 ## v0.1.1 patch validation — 2026-10-06
-- Windows CI https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37511988054 at checkpoint `ae3c6cb`: **122/122 tests PASS**, no skipped tests.
+- Windows CI https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37511988054 at checkpoint `ae3c6cb`: **122/122 tests PASS**, no skipped tests.
 - Both normal-build and extracted self-contained EXE smoke runs: **33 assertions PASS** across nine pages, including native L2TP provisioning/route cleanup and Credential Manager covered by the separate integration tests.
 - Captured nine real dropdown fields in closed, focused, disabled and expanded states. Inspected enum, string, integer and object-name selections, including all fields shown in the user's screenshots. Popup content is captured separately from the main window.
 - Navigation, primary buttons, DataGrid and logs remain readable. These are visual render checks; keyboard navigation was not separately automated.
@@ -21,7 +26,7 @@ v0.1.1 patch acceptance completed. Generated dropdown text inherits the owning c
 
 ## What actually passed
 - Full solution restore/build: zero warnings/errors.
-- Windows CI run https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37385355364 at source checkpoint dcf4b93: **122/122 tests PASS**.
+- Windows CI run https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37385355364 at source checkpoint dcf4b93: **122/122 tests PASS**.
 - Real Windows L2TP profile creation, split route configuration, disconnected-state query and removal: PASS. No remote dial attempted.
 - Real Windows Credential Manager save/read/delete with generated disposable test values: PASS.
 - WPF navigation for nine pages, all seven Mock failure stages, connect/disconnect, simulated route analysis, profile serialization, clipboard/evidence redaction, group/policy changes and templates: **33 assertions PASS**.
@@ -43,9 +48,9 @@ For a new development session: read README.md and this file, inspect git status/
 For lab acceptance: install the required official engine, supply real server/profile credentials locally, validate Local Test first, then AD/RADIUS/LDAP, routing/return paths/NAT/firewalls and public-interface captures. Record actual outcomes and export redacted evidence.
 
 ## Release identity
-Tag: **v0.1.1**. Resolve the exact release commit with `git rev-parse v0.1.1`; the successful tag workflow supplies the corresponding release build evidence.
-Release: https://github.com/esixtosr/CNIT455-VPN-Console/releases/tag/v0.1.1
-Patch asset: **CNIT455-VPN-Console-v0.1.1-win-x64.zip** plus **SHA256SUMS.txt**.
+Planned tag: **v0.2.0**. The tag workflow supplies the corresponding release build evidence.
+Release: https://github.com/esixtosr/Windows-VPN-Console/releases/tag/v0.2.0
+Asset: **Windows-VPN-Console-v0.2.0-win-x64.zip** plus **SHA256SUMS.txt**.
 The checksum in the release is authoritative; documentation edits change ZIP bytes, so candidate-build checksums are not reused.
 
 ## External dependencies

@@ -4,7 +4,9 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <AssemblyName>CNIT455-VPN</AssemblyName>
+    <AssemblyName>Windows-VPN</AssemblyName>
+    <Product>Windows VPN Console</Product>
+    <Description>VPN profiles, diagnostics and configuration helpers for Windows.</Description>
     <RootNamespace>CNIT455.VPN.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>

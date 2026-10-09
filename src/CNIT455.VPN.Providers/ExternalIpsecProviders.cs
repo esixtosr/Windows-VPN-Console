@@ -62,7 +62,7 @@ public sealed class NcpProvider(SecretRedactor? redactor = null) : VpnProviderBa
 {
     public override string Id => "ncp";
     private static string? Executable => ProviderEnvironment.FindProgram(@"NCP\SecureClient\ncpmon.exe");
-    private const string Limitations = "Separately licensed NCP Secure Entry client. Interactive handoff only in v0.1.0. NCP advertises an API/CLI, but a current, version-specific, profile-scoped control and status contract was not verified. Configure/select the profile and enter credentials in NCP; no NCP binaries or licensing are bundled.";
+    private const string Limitations = "Separately licensed NCP Secure Entry client. Interactive handoff only. NCP advertises an API/CLI, but a current, version-specific, profile-scoped control and status contract was not verified. Configure/select the profile and enter credentials in NCP; no NCP binaries or licensing are bundled.";
     public override Task<ProviderCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ProviderCapabilities(Id, "NCP Secure Entry (interactive)", [VpnProtocol.IpsecMobile, VpnProtocol.Ikev2], [AuthenticationMode.ProviderDefault], true, false, false, false, Limitations));
     public override async Task<DependencyInfo> DetectInstallation(CancellationToken cancellationToken = default)
     {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 — 2026-10-08
+
+- Renamed the application and release package to Windows VPN Console / Windows-VPN.exe.
+- Prepared the repository for public downloads and added a plain-language user manual, VM reuse steps, and troubleshooting table.
+- New installations start in generic mode with a blank profile; course topology and checklists remain optional in Lab Mode.
+- Preserved existing profile, credential and provider identifiers for upgrades from v0.1.x.
+- App, diagnostic and Mock version labels now reflect the compiled version.
+- Extended Windows smoke coverage to check the fresh generic workspace before exercising optional lab workflows.
+
 ## 0.1.1 — 2026-10-06
 
 - Passed 122 Windows tests and both 33-assertion smoke runs; visually reviewed nine dropdowns and refreshed the runtime screenshot.

@@ -65,7 +65,7 @@ public sealed class DiagnosticSnapshot
 {
     public DateTimeOffset CapturedAt { get; set; } = DateTimeOffset.Now;
     public string OsVersion { get; set; } = Environment.OSVersion.ToString();
-    public string AppVersion { get; set; } = "0.1.0";
+    public string AppVersion { get; set; } = typeof(DiagnosticSnapshot).Assembly.GetName().Version?.ToString(3) ?? "unknown";
     public bool IsAdministrator { get; set; }
     public VpnProfile Profile { get; set; } = new();
     public VpnStatus Status { get; set; } = new(VpnState.Unknown, "Not queried");

@@ -46,7 +46,7 @@ public sealed class ProfileStore(string? root = null)
 public sealed class AppSettings
 {
     public bool DeveloperMode {get;set;}
-    public bool LabMode {get;set;}=true;
+    public bool LabMode {get;set;}
     public bool AdvancedMode {get;set;}
     public int LogRetentionDays {get;set;}=14;
     public int GroupNumber {get;set;}=33;

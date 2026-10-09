@@ -24,7 +24,7 @@ public sealed class WindowsSecretStore : ISecretStore
         try
         {
             Marshal.Copy(bytes,0,ptr,bytes.Length);
-            var credential = new Credential { Type=1,TargetName=Target(profileId),CredentialBlobSize=(uint)bytes.Length,CredentialBlob=ptr,Persist=2,UserName=Environment.UserName,Comment="CNIT 455 VPN Console: explicitly remembered by this Windows account" };
+            var credential = new Credential { Type=1,TargetName=Target(profileId),CredentialBlobSize=(uint)bytes.Length,CredentialBlob=ptr,Persist=2,UserName=Environment.UserName,Comment="Windows VPN Console: explicitly remembered by this Windows account" };
             if (!CredWrite(ref credential,0)) throw new Win32Exception(Marshal.GetLastWin32Error());
         }
         finally { Marshal.Copy(new byte[bytes.Length],0,ptr,bytes.Length); Marshal.FreeHGlobal(ptr); CryptographicOperations.ZeroMemory(bytes); }

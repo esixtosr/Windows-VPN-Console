@@ -19,9 +19,9 @@ Profiles and settings remain under `%LOCALAPPDATA%\CNIT455-VPN-Console` for the 
 
 ## Validation and limits
 
-[Windows validation](https://github.com/esixtosr/CNIT455-VPN-Console/actions/runs/37511988054) passed all **122 tests** and **33 UI assertions** on both normal build output and the extracted self-contained executable. Selected text and open menus were visually reviewed across the affected fields. The tag workflow repeats these checks for this exact release.
+[Windows validation](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37511988054) passed all **122 tests** and **33 UI assertions** on both normal build output and the extracted self-contained executable. Selected text and open menus were visually reviewed across the affected fields. The tag workflow repeats these checks for this exact release.
 
-See [PROJECT_STATUS.md](https://github.com/esixtosr/CNIT455-VPN-Console/blob/v0.1.1/PROJECT_STATUS.md) for this patch's validation record and [Acceptance.md](https://github.com/esixtosr/CNIT455-VPN-Console/blob/v0.1.1/docs/Acceptance.md) for the separate software and live-VM checks.
+See [PROJECT_STATUS.md](https://github.com/esixtosr/Windows-VPN-Console/blob/v0.1.1/PROJECT_STATUS.md) for this patch's validation record and [Acceptance.md](https://github.com/esixtosr/Windows-VPN-Console/blob/v0.1.1/docs/Acceptance.md) for the separate software and live-VM checks.
 
 Live lab VPN handshakes and traffic remain unverified. OpenVPN, WireGuard, Shrew Soft, and NCP require separate official installations where applicable. Shrew/NCP hand off interactively and never equate launching a client with CONNECTED. Shrew's Windows 11 compatibility remains unverified.
 

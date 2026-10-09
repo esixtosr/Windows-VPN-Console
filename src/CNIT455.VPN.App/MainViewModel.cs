@@ -166,12 +166,19 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var provider in providers) capabilities[provider.Id] = await provider.GetCapabilitiesAsync();
         foreach (var profile in await store.LoadAllAsync()) Profiles.Add(profile);
 
-        if (Profiles.Count == 0) foreach (var profile in LabPresets.CreateClientProfiles(Topology)) { Profiles.Add(profile); await store.SaveAsync(profile); }
+        if (Profiles.Count == 0)
+        {
+            var initialProfiles = LabMode ? LabPresets.CreateClientProfiles(Topology) : [new VpnProfile { Name = "My VPN", IsLab = false }];
+            foreach (var profile in initialProfiles) { Profiles.Add(profile); await store.SaveAsync(profile); }
+        }
         SelectedProfile = Profiles.FirstOrDefault();
         foreach (var warning in store.LoadWarnings) AppendLog(new(DateTimeOffset.Now, LogSeverity.Warning, "app", VpnStage.Initialization, warning));
         BuildCheckoffs(); await LoadEvidenceAsync();
-        ServerOptions.ExternalAddress = Topology.VyosExternal.Split('/')[0];
-        ServerOptions.LocalNetwork = Topology.VyosHq; ServerOptions.RemoteNetwork = Topology.VyosRemote;
+        if (LabMode)
+        {
+            ServerOptions.ExternalAddress = Topology.VyosExternal.Split('/')[0];
+            ServerOptions.LocalNetwork = Topology.VyosHq; ServerOptions.RemoteNetwork = Topology.VyosRemote;
+        }
         await DetectDependenciesAsync();
         await RefreshCertificatesAsync();
         CleanupOldLogs();
@@ -363,7 +370,7 @@ public sealed partial class MainViewModel : ObservableObject
         finally { evidenceGate.Release(); }
     }
     private async Task LoadEvidenceAsync() { var path = Path.Combine(dataRoot, "checkoff.json"); if (!File.Exists(path)) return; var data = JsonSerializer.Deserialize<Dictionary<string, List<CheckoffItem>>>(await File.ReadAllTextAsync(path)); if (data is null) return; foreach (var pair in data) if (evidence.ContainsKey(pair.Key)) foreach (var item in pair.Value) { var row = evidence[pair.Key].FirstOrDefault(x => x.Id == item.Id); if (row is not null && row.Text == item.Text) { row.Result = item.Result; row.Evidence = item.Evidence; } } RefreshCheckoffRows(); Raise(nameof(CheckoffSummary)); }
-    private async Task ExportEvidenceAsync() { if (snapshot is null) await CollectDiagnosticsAsync(); if (snapshot is null) return; var dialog = new SaveFileDialog { Filter = "Evidence bundle (*.zip)|*.zip", FileName = $"CNIT455-VPN-Evidence-{DateTime.Now:yyyyMMdd-HHmmss}.zip" }; if (dialog.ShowDialog() != true) return; RegisterSecrets(); await new EvidenceExporter(redactor).ExportAsync(dialog.FileName, snapshot, evidence.Values.SelectMany(x => x).Select(x => x.ToItem())); StatusText = "Redacted evidence bundle exported. Manual PASS entries represent your own recorded observations."; }
+    private async Task ExportEvidenceAsync() { if (snapshot is null) await CollectDiagnosticsAsync(); if (snapshot is null) return; var dialog = new SaveFileDialog { Filter = "Evidence bundle (*.zip)|*.zip", FileName = $"Windows-VPN-Evidence-{DateTime.Now:yyyyMMdd-HHmmss}.zip" }; if (dialog.ShowDialog() != true) return; RegisterSecrets(); await new EvidenceExporter(redactor).ExportAsync(dialog.FileName, snapshot, evidence.Values.SelectMany(x => x).Select(x => x.ToItem())); StatusText = "Redacted evidence bundle exported. Manual PASS entries represent your own recorded observations."; }
     private async Task SaveSettingsAsync() { if (LogRetentionDays is < 1 or > 365) throw new ArgumentException("Log retention must be 1–365 days."); ValidateTopology(); settings.Topology = Topology; BuildCheckoffs(); await File.WriteAllTextAsync(Path.Combine(dataRoot, "settings.json"), JsonSerializer.Serialize(settings, json)); RefreshAccessRules(); Raise(nameof(Topology)); StatusText = "Workspace settings saved."; }
     private async Task DetectDependenciesAsync()
     {

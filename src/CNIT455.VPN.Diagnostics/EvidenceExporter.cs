@@ -11,7 +11,7 @@ public sealed class EvidenceExporter(SecretRedactor redactor)
         var formatter=new DiagnosticFormatter(redactor);
         var entries=new Dictionary<string,string>
         {
-            ["summary.txt"]=$"CNIT455 VPN Console {snapshot.AppVersion}\nCaptured {snapshot.CapturedAt:O}\nProfile: {snapshot.Profile.Name}\n{snapshot.Profile.Protocol} / {snapshot.Profile.ProviderId}\nTunnel: {snapshot.Status.State}\nRoute policy: {snapshot.Routing.Result}\nManual checkoff entries are user attestations, not automated measurements.\nCapture files are not automatically included because they can contain sensitive traffic.",
+            ["summary.txt"]=$"Windows VPN Console {snapshot.AppVersion}\nCaptured {snapshot.CapturedAt:O}\nProfile: {snapshot.Profile.Name}\n{snapshot.Profile.Protocol} / {snapshot.Profile.ProviderId}\nTunnel: {snapshot.Status.State}\nRoute policy: {snapshot.Routing.Result}\nManual checkoff entries are user attestations, not automated measurements.\nCapture files are not automatically included because they can contain sensitive traffic.",
             ["diagnostics.txt"]=formatter.Format(snapshot),
             ["routes.txt"]=string.Join("\n",snapshot.Routes.Select(RouteAnalyzer.Describe)),
             ["interfaces.txt"]=formatter.FormatInterfaces(snapshot),

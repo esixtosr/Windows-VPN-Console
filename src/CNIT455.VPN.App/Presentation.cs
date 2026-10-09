@@ -45,7 +45,7 @@ public sealed class CheckoffRow(CheckoffItem item) : ObservableObject
 public sealed class UserSettings
 {
     public bool DeveloperMode { get; set; }
-    public bool LabMode { get; set; } = true;
+    public bool LabMode { get; set; }
     public int GroupNumber { get; set; } = 33;
     public int LogRetentionDays { get; set; } = 14;
     public LabTopology? Topology { get; set; }

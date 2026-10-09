@@ -45,6 +45,9 @@ public sealed partial class MainViewModel
         var visited = new List<string>(); var assertions = new List<string>();
         void Check(bool condition, string message) { if (!condition) throw new InvalidOperationException("Smoke assertion failed: " + message); assertions.Add(message); }
         async Task Drain() => await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+        Check(!LabMode && !Navigation.Contains("Lab 2") && Profiles.Count == 1 && !Profiles[0].IsLab && string.IsNullOrEmpty(Profiles[0].Gateway), "Fresh workspace starts in generic mode without lab endpoints");
+        await window.CapturePageAsync(Path.Combine(screenDirectory, "generic-first-run.png"));
+        LabMode = true; await SeedLabAsync();
         foreach (var page in Navigation.ToArray())
         {
             SelectedPage = page; await window.CapturePageAsync(Path.Combine(screenDirectory, page.Replace(' ', '-').ToLowerInvariant() + ".png")); visited.Add(page);
@@ -67,6 +70,9 @@ public sealed partial class MainViewModel
         await CopyDiagnosticsAsync(); var copied = Clipboard.GetText();
         Check(!copied.Contains(Secrets.Psk) && !copied.Contains(Secrets.Password) && !copied.Contains("Test123") && copied.Contains("show route: simulated"), "Clipboard redacts secrets and includes latest pasted output");
         await window.CapturePageAsync(Path.Combine(screenDirectory, "mock-connected.png"));
+        LabMode = false;
+        await window.CapturePageAsync(Path.Combine(screenDirectory, "generic-mock-connected.png"));
+        LabMode = true;
         var evidencePath = Path.Combine(output, "smoke-evidence.zip");
         await new EvidenceExporter(redactor).ExportAsync(evidencePath, snapshot!, evidence.Values.SelectMany(x => x).Select(x => x.ToItem()));
         using (var zip = ZipFile.OpenRead(evidencePath))
