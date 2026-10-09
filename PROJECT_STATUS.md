@@ -5,7 +5,7 @@
 - Native Windows adapter, OpenVPN/WireGuard adapters, Shrew/NCP interactive handoffs and configurable Mock provider.
 - Secret-free JSON profiles, optional Windows Credential Manager storage, certificate metadata and redacted logs/clipboard/evidence.
 - IPv4 route validation, deterministic troubleshooting, all seven checkoff catalogs, source-reviewed VyOS/pfSense helpers, client templates and packet-capture guidance.
-- 122 automated tests; Windows WPF and extracted self-contained release smoke checks; documentation, screenshot, licensing, presets, CI and portable packaging.
+- 138 automated tests; Windows WPF and extracted self-contained release smoke checks; documentation, screenshot, licensing, presets, CI and portable packaging.
 - Repository: https://github.com/esixtosr/Windows-VPN-Console.
 
 ## Current phase
@@ -18,8 +18,11 @@ v0.2.1-preview.1 focuses on interface cleanup and truthful network evidence. Ind
 - Smaller shell, navigation icons, dark dropdowns, friendly enum labels, responsive forms, collapsed technical details and activity log.
 - External clients retain ownership of authentication and connection control. The editor no longer collects unused secrets or shows Windows-only IKEv2 guidance for NCP.
 - Dashboard separates observed private-route address/interface evidence from provider status and shows when diagnostics were collected. Equal-cost routes, conflicting subroutes, missing targets and down adapters do not select a misleading address.
-- Local Release cross-build: zero warnings/errors. Managed tests: 136 passed; two Windows-only integration checks skipped on macOS. Windows UI/portable smoke checks pending for this preview.
-- Public branch upload was blocked by the safety review pending explicit user approval. Nothing was pushed and the stable release was not changed. The local preview ZIP is cross-built; it must not be described as Windows-runtime or visually verified until those checks run.
+- Uploaded to `codex/interface-polish` with explicit user approval; `main` and the stable v0.2.0 release remain unchanged.
+- Windows CI https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004040500 at checkpoint `9d61dc4`: **138/138 tests PASS**, no skipped tests. Normal-build and extracted portable-app smoke runs: **44 assertions PASS** each across nine pages.
+- The first Windows run caught an editor refresh resetting the engine selection. Fixed temporary selector changes writing into profiles; regression checks cover profile switching and preserving authentication/in-memory secrets. UI smoke mode now blocks connect/disconnect through non-simulated engines.
+- Inspected real Windows renders of the general-purpose dashboard, compact external-client editor, observed-adapter dashboard, engines page and dropdown states. Refreshed the repository screenshot. Fixtures remain synthetic; this does not establish a real VPN handshake.
+- Local Release cross-build: zero warnings/errors. All 136 cross-platform tests passed; the two Windows-only checks subsequently passed in CI.
 - User-supplied screenshot reports NCP Connection established. Their local diagnostic report contains a private adapter address and a specific private-network route with a separate Internet interface. This supports a successful external-client connection report, not independently verified private-host access or encryption. No live reports, credentials or screenshots are packaged.
 - No router, NCP profile, authentication mode or saved-user-data migration is performed by this UI update.
 

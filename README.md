@@ -17,9 +17,9 @@ The development branch includes the **0.2.1 interface preview**: a new app icon,
 
 That is the installation: extract and run. You do not need Git, Visual Studio, or a separate .NET installation. You can use the same release ZIP on multiple Windows VMs. Each VM keeps its own profiles and credentials.
 
-![Windows VPN Console starting in general-purpose mode](docs/images/dashboard.png)
+![Windows VPN Console interface preview starting in general-purpose mode](docs/images/dashboard.png)
 
-On first start, **My VPN** is a blank profile. Fill in your connection details before connecting; **UNKNOWN** is normal until status can be checked.
+On first start, **My VPN** is a blank profile. Fill in your connection details before connecting; **Not checked** (UNKNOWN in v0.2.0) is normal until status can be checked.
 
 Choose the named Windows ZIP, not **Source code** or **Code → Download ZIP**. Those contain development files. The app runs on Windows; there is no native Mac or Linux app.
 
@@ -94,6 +94,8 @@ Get-FileHash .\Windows-VPN-Console-v0.2.0-win-x64.zip -Algorithm SHA256
 Compare it with the matching entry in `SHA256SUMS.txt`. The values should match; capitalization does not matter. This checks file integrity, not whether a VPN connection works.
 
 ## What has been tested?
+
+[Windows validation for the interface preview](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004040500) passed **138 tests** and **44 UI checks** on both the normal build and extracted portable app. Windows-rendered screens were inspected, and profile switching now has regression coverage so refreshing the editor does not replace the selected engine. This preview is on `codex/interface-polish`; it is not yet the stable download.
 
 [Windows validation for v0.2.0](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551) passed **122 tests** and **34 UI checks** on both the normal build and extracted portable app. This includes real native profile create/remove behavior, Windows Credential Manager, and the new general-purpose starting screen. The [acceptance record](docs/Acceptance.md) separates verified software behavior from live VPN checks. External client compatibility, real server authentication, routing, and encryption still need testing against your own environment.
 

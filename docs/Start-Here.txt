@@ -38,7 +38,9 @@ publisher, verify the source and ZIP checksum; do not disable Windows security.
 No external VPN engine is included. There is no automatic update or installer.
 
 VALIDATION FOR THIS PREVIEW
-Release cross-build passed with no warnings or errors. All 136 cross-platform
-tests passed. Windows-only tests and rendered UI checks have not yet run for
-this preview; they require Windows or approval to upload the development branch
-for CI. Keep the earlier working app available while trying this copy.
+Windows CI passed all 138 tests and 44 interface checks for both the regular
+build and the extracted portable app. The icon, dropdowns, compact layout and
+profile switching were checked on Windows. UI connection tests use simulated
+traffic; your real VPN/server still needs its own connection and access checks.
+See PROJECT_STATUS.md for the tested source checkpoint and Windows run link.
+Keep the earlier working app available while trying this preview.
