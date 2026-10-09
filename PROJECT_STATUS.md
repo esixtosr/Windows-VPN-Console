@@ -6,10 +6,17 @@
 - Secret-free JSON profiles, optional Windows Credential Manager storage, certificate metadata and redacted logs/clipboard/evidence.
 - IPv4 route validation, deterministic troubleshooting, all seven checkoff catalogs, source-reviewed VyOS/pfSense helpers, client templates and packet-capture guidance.
 - 122 automated tests; Windows WPF and extracted self-contained release smoke checks; documentation, screenshot, licensing, presets, CI and portable packaging.
-- Repository destination: https://github.com/esixtosr/Windows-VPN-Console (public rebrand in progress).
+- Repository: https://github.com/esixtosr/Windows-VPN-Console.
 
 ## Current phase
-Preparing v0.2.0 as Windows VPN Console with public downloads, a beginner README/user guide, general-purpose first-run defaults, and optional lab mode. Existing storage and provider identifiers remain compatible. Local/Windows validation and final public release verification are pending. Live lab/server acceptance remains an explicit external verification task.
+v0.2.0 software acceptance completed as Windows VPN Console, with a beginner README/user guide, general-purpose first-run defaults, and optional lab mode. Existing storage and provider identifiers remain compatible. The tag workflow repeats acceptance and publishes the public portable download. Live lab/server acceptance remains an explicit external verification task.
+
+## v0.2.0 validation — 2026-10-08
+- Windows CI https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551 at checkpoint `10d11d4`: **122/122 tests PASS**, no skipped tests.
+- Normal-build and extracted `Windows-VPN.exe` smoke runs: **34 assertions PASS** each, including a fresh generic workspace with no prefilled lab endpoint, optional lab workflows, and all existing provider/mock/redaction checks.
+- Inspected Windows screenshots of the new general-purpose dashboard, simulated dashboard and renamed About/version display. Updated the documentation screenshot.
+- Local cross-build: zero warnings/errors. All 120 cross-platform tests passed; the two Windows-only tests subsequently passed in CI.
+- Reviewed README/user-guide local links, public download steps, cross-VM profile export/import limitations and backward-compatible storage behavior.
 
 ## Public release review — 2026-10-08
 - Reviewed tracked file names and scanned all 125 historical Git blobs for common credential-token, private-key-block and credential-URL patterns; no matches and no secret-bearing VPN files, key containers, captures or PDFs were found.
@@ -48,7 +55,7 @@ For a new development session: read README.md and this file, inspect git status/
 For lab acceptance: install the required official engine, supply real server/profile credentials locally, validate Local Test first, then AD/RADIUS/LDAP, routing/return paths/NAT/firewalls and public-interface captures. Record actual outcomes and export redacted evidence.
 
 ## Release identity
-Planned tag: **v0.2.0**. The tag workflow supplies the corresponding release build evidence.
+Tag: **v0.2.0**. The successful tag workflow supplies the corresponding release build evidence.
 Release: https://github.com/esixtosr/Windows-VPN-Console/releases/tag/v0.2.0
 Asset: **Windows-VPN-Console-v0.2.0-win-x64.zip** plus **SHA256SUMS.txt**.
 The checksum in the release is authoritative; documentation edits change ZIP bytes, so candidate-build checksums are not reused.

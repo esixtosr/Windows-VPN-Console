@@ -8,6 +8,7 @@
 - Preserved existing profile, credential and provider identifiers for upgrades from v0.1.x.
 - App, diagnostic and Mock version labels now reflect the compiled version.
 - Extended Windows smoke coverage to check the fresh generic workspace before exercising optional lab workflows.
+- Passed 122 Windows tests and both 34-check UI smoke runs; visually verified the renamed executable and new starting screen.
 
 ## 0.1.1 — 2026-10-06
 

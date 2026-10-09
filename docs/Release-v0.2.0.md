@@ -15,6 +15,6 @@ Disconnect, close the old app, and extract this ZIP to a new folder. Run `Window
 
 ## Validation and limitations
 
-Windows build/test and portable UI acceptance are required before this release is published. See the [acceptance record](https://github.com/esixtosr/Windows-VPN-Console/blob/v0.2.0/docs/Acceptance.md) for results.
+[Windows validation](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551) passed **122 tests** and **34 UI checks** in each of the normal and portable runs. The tag workflow repeats these checks before publishing this exact release. See the [acceptance record](https://github.com/esixtosr/Windows-VPN-Console/blob/v0.2.0/docs/Acceptance.md) for details.
 
 Real VPN server connectivity still depends on your own server, credentials, client software, routes, and firewall rules. External engines are installed separately. Shrew/NCP use interactive handoff and never count a launched window as CONNECTED. The EXE is unsigned.

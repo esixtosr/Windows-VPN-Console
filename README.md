@@ -15,6 +15,10 @@ Use it to save connections, start supported VPN clients, inspect routes, and col
 
 That is the installation: extract and run. You do not need Git, Visual Studio, or a separate .NET installation. You can use the same release ZIP on multiple Windows VMs. Each VM keeps its own profiles and credentials.
 
+![Windows VPN Console starting in general-purpose mode](docs/images/dashboard.png)
+
+On first start, **My VPN** is a blank profile. Fill in your connection details before connecting; **UNKNOWN** is normal until status can be checked.
+
 Choose the named Windows ZIP, not **Source code** or **Code → Download ZIP**. Those contain development files. The app runs on Windows; there is no native Mac or Linux app.
 
 The executable is unsigned, so Windows may show an unknown-publisher message. Download from this repository and check the checksum if needed; do not turn off Windows security protections.
@@ -89,7 +93,7 @@ Compare it with the matching entry in `SHA256SUMS.txt`. The values should match;
 
 ## What has been tested?
 
-Windows CI checks the build, automated tests, native profile create/remove behavior, Windows Credential Manager, and normal/portable UI startup. The [acceptance record](docs/Acceptance.md) separates verified software behavior from live VPN checks. External client compatibility, real server authentication, routing, and encryption still need testing against your own environment.
+[Windows validation for v0.2.0](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551) passed **122 tests** and **34 UI checks** on both the normal build and extracted portable app. This includes real native profile create/remove behavior, Windows Credential Manager, and the new general-purpose starting screen. The [acceptance record](docs/Acceptance.md) separates verified software behavior from live VPN checks. External client compatibility, real server authentication, routing, and encryption still need testing against your own environment.
 
 ## More information
 

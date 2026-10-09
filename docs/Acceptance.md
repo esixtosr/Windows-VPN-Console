@@ -4,6 +4,10 @@ This document separates verified software behavior from operations that require 
 
 ## Verified Windows results
 
+### v0.2.0 public rebrand
+
+[CI run 37878883551](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551), checkpoint `10d11d4`, passed **122/122 tests** and both **34-assertion** smoke runs. The renamed `Windows-VPN.exe` launched from the extracted self-contained ZIP. A new assertion verifies generic mode, one blank non-lab profile and no prefilled gateway on first start. The smoke then opts into lab mode and repeats the existing nine-page, dropdown, simulated-provider and evidence checks. Screenshots confirm the general-purpose dashboard and current product/version labels. The tag workflow repeats the gates for the exact release.
+
 ### v0.1.1 dropdown patch
 
 [CI run 37511988054](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37511988054), checkpoint `ae3c6cb`, passed **122/122 tests** and both **33-assertion** WPF smoke runs. Nine real dropdowns were captured closed, focused, disabled and expanded. Visual review confirmed readable VPN type, authentication, tunnel policy, server-template and backend values, along with string, integer and object-name choices. Expanded popup windows were rendered separately. Primary buttons, navigation, tables and logs were also reviewed. This is visual and existing functional acceptance; keyboard navigation and live VPN clients were not newly exercised. The v0.1.1 tag workflow repeats the gates for the exact release package.
