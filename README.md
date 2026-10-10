@@ -95,7 +95,7 @@ Compare it with the matching entry in `SHA256SUMS.txt`. The values should match;
 
 ## What has been tested?
 
-[Windows validation for the interface refresh](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004353571) passed **138 tests** and **44 UI checks** on both the normal build and extracted portable app. Windows-rendered screens were inspected, and profile switching now has regression coverage so refreshing the editor does not replace the selected engine. The v0.2.1 tag workflow repeats these gates before publishing the release ZIP.
+[Windows validation for v0.2.1](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38009185217) passed **138 tests** and **44 UI checks** on both the normal build and extracted portable app. Windows-rendered screens were inspected, and profile switching now has regression coverage so refreshing the editor does not replace the selected engine. The v0.2.1 tag workflow repeats these gates before publishing the release ZIP.
 
 [Windows validation for v0.2.0](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551) passed **122 tests** and **34 UI checks** on both the normal build and extracted portable app. This includes real native profile create/remove behavior, Windows Credential Manager, and the new general-purpose starting screen. The [acceptance record](docs/Acceptance.md) separates verified software behavior from live VPN checks. External client compatibility, real server authentication, routing, and encryption still need testing against your own environment.
 

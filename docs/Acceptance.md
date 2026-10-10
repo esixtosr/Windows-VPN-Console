@@ -6,7 +6,7 @@ This document separates verified software behavior from operations that require 
 
 ### v0.2.1 interface refresh
 
-[CI run 38004353571](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004353571), checkpoint `56bd19b`, passed **138/138 tests** and both **44-assertion** smoke runs. The normal build and extracted portable app exercised all nine pages, icon loading, dark dropdown labels/states, compact layouts, external-client evidence display and profile switching. Refreshing the editor preserves the selected engine, authentication and in-memory secrets. UI smoke mode blocks real-provider connect/disconnect calls. Windows-rendered screens were inspected. The v0.2.1 tag workflow repeats these gates for the exact release package before publication.
+[CI run 38009185217](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38009185217), checkpoint `5484fd6`, passed **138/138 tests** and both **44-assertion** smoke runs with the final v0.2.1 application version. The normal build and extracted portable app exercised all nine pages, icon loading, dark dropdown labels/states, compact layouts, external-client evidence display and profile switching. Refreshing the editor preserves the selected engine, authentication and in-memory secrets. UI smoke mode blocks real-provider connect/disconnect calls. Windows-rendered screens were inspected. The v0.2.1 tag workflow repeats these gates for the exact release package before publication.
 
 Observed route/adapter fixtures do not establish real VPN authentication, private-host access or encryption. External-client state remains separate from those observations.
 

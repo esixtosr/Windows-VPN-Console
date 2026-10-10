@@ -27,6 +27,7 @@ v0.2.1 focuses on interface cleanup and truthful network evidence. Independent I
 - No router, NCP profile, authentication mode or saved-user-data migration is performed by this UI update.
 
 ## v0.2.1 publication review — 2026-10-09
+- Final-version Windows acceptance: https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38009185217 at `5484fd6`, **138/138 tests PASS**, **44 UI assertions PASS** each on the normal build and extracted portable package. Refreshed the documentation screenshot with the verified v0.2.1 rendering.
 - Checked 205 historical Git blobs and 94 current source files for common credential-token, private-key and credential-URL patterns. Private-key-header matches were limited to synthetic redaction/rejected-import tests, not usable keys. No unintended credentials or secret-bearing user exports were identified by this targeted check.
 - Scanned the three interface-branch workflow logs for the same credential patterns; no matches. This is not a guarantee against every possible secret format.
 - The release keeps the existing unsigned portable packaging and does not bundle external VPN engines, real profiles, course PDFs or user diagnostic exports.

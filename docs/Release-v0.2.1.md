@@ -25,6 +25,6 @@ Disconnect and close the old console, extract this ZIP to a new folder, and open
 
 ## Validation and limits
 
-[The interface acceptance build](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004353571) passed **138 Windows tests** and **44 interface checks** on both the normal build and extracted portable app. The tagged release workflow repeats these checks before publishing its ZIP and **SHA256SUMS.txt**.
+[The v0.2.1 acceptance build](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38009185217) passed **138 Windows tests** and **44 interface checks** on both the normal build and extracted portable app. The tagged release workflow repeats these checks before publishing its ZIP and **SHA256SUMS.txt**.
 
 The interface tests simulate VPN traffic. Real server authentication, internal-host access and encryption require checks against your own environment. External engines are not bundled; NCP still requires its own license. This update does not change router or NCP settings.
