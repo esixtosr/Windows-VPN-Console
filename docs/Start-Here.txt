@@ -1,4 +1,4 @@
-WINDOWS VPN CONSOLE — INTERFACE PREVIEW
+WINDOWS VPN CONSOLE — v0.2.1
 
 1. Copy this ZIP to your Windows 11 x64 computer or VM.
 2. Right-click the ZIP, choose Extract All, and open the extracted folder.
@@ -33,14 +33,14 @@ Never run several VPN clients against the same connection at once.
 Windows native VPN, WireGuard and OpenVPN have different integration limits.
 See Docs/User-Guide.md and PROJECT_STATUS.md for capabilities and test evidence.
 
-This is an unsigned preview, not a v1.0 release. If Windows asks about the
+This is an unsigned application. If Windows asks about the
 publisher, verify the source and ZIP checksum; do not disable Windows security.
 No external VPN engine is included. There is no automatic update or installer.
 
-VALIDATION FOR THIS PREVIEW
+VALIDATION
 Windows CI passed all 138 tests and 44 interface checks for both the regular
 build and the extracted portable app. The icon, dropdowns, compact layout and
 profile switching were checked on Windows. UI connection tests use simulated
 traffic; your real VPN/server still needs its own connection and access checks.
 See PROJECT_STATUS.md for the tested source checkpoint and Windows run link.
-Keep the earlier working app available while trying this preview.
+Keep the earlier working app available for rollback after updating.

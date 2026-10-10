@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1-preview.1 — interface refresh
+## 0.2.1 — 2026-10-09
 
 - New original shield icon, navigation icons, consistent dark dropdowns and clearer labels.
 - Compact dashboard, responsive two-column forms, collapsed activity log and optional technical detail sections.
@@ -9,6 +9,8 @@
 - Reject ambiguous, conflicting, default-only and down-adapter evidence when choosing an observed private-route adapter.
 - Simplify engine detection; show Detected / Not detected and keep the selected download item after refresh.
 - Preserve profile storage, provider IDs, remembered credentials and existing network configurations.
+- Fix an editor refresh that could replace a saved engine selection; retain authentication and in-memory secrets while rebuilding the menus.
+- Prevent UI smoke tests from connecting or disconnecting through a real VPN engine.
 - Extend the Windows smoke suite for the icon, collapsed logs, displayed dropdown labels, smaller windows and external-client observations. Test results are recorded in PROJECT_STATUS.md.
 
 ## 0.2.0 — 2026-10-08

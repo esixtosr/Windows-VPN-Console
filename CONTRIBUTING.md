@@ -8,7 +8,7 @@ On Windows with the .NET 10 SDK installed:
 dotnet restore CNIT455-VPN-Console.sln
 dotnet build CNIT455-VPN-Console.sln -c Release --no-restore
 dotnet test tests/CNIT455.VPN.Tests -c Release --no-build
-powershell -File scripts/Publish.ps1 -Version v0.2.0
+powershell -File scripts/Publish.ps1 -Version v0.2.1
 ```
 
 The app's `--smoke-test <report-path>` mode runs isolated UI checks with simulated VPN traffic. CI runs it for both the normal build and the extracted portable package. macOS/Linux can build reusable libraries and cross-compile WPF with `EnableWindowsTargeting`; only Windows can validate this desktop runtime.

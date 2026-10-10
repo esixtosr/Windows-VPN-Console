@@ -6,18 +6,18 @@ Use it to save connections, start supported VPN clients, inspect routes, and col
 
 **[Download the latest Windows app](https://github.com/esixtosr/Windows-VPN-Console/releases/latest)** · [Easy user guide](docs/User-Guide.md) · [Troubleshooting](docs/User-Guide.md#when-something-goes-wrong)
 
-The development branch includes the **0.2.1 interface preview**: a new app icon, dark dropdowns, a compact dashboard and clearer external-client actions. The latest published stable release remains v0.2.0. In the preview, **VPN engines** replaces the Dependencies label and **Check settings** replaces Validate. See [preview startup instructions](docs/Start-Here.txt).
+**v0.2.1** adds a new app icon, dark dropdowns, a compact dashboard and clearer external-client actions. **VPN engines** replaces the Dependencies label and **Check settings** replaces Validate. See [what changed](docs/Release-v0.2.1.md) or the [quick-start instructions](docs/Start-Here.txt).
 
 ## 1. Download and open it
 
 1. Open the download link above on your Windows VM or PC. No GitHub account is needed.
-2. Under **Assets**, download **Windows-VPN-Console-v0.2.0-win-x64.zip**, or the Windows ZIP listed in the newest release.
+2. Under **Assets**, download **Windows-VPN-Console-v0.2.1-win-x64.zip**, or the Windows ZIP listed in the newest release.
 3. Right-click the ZIP and choose **Extract All**.
 4. Open the extracted folder and run **Windows-VPN.exe**.
 
 That is the installation: extract and run. You do not need Git, Visual Studio, or a separate .NET installation. You can use the same release ZIP on multiple Windows VMs. Each VM keeps its own profiles and credentials.
 
-![Windows VPN Console interface preview starting in general-purpose mode](docs/images/dashboard.png)
+![Windows VPN Console starting in general-purpose mode](docs/images/dashboard.png)
 
 On first start, **My VPN** is a blank profile. Fill in your connection details before connecting; **Not checked** (UNKNOWN in v0.2.0) is normal until status can be checked.
 
@@ -88,14 +88,14 @@ New installations open in general-purpose mode. For the original CNIT 455 exerci
 `SHA256SUMS.txt` contains the expected fingerprint of the release ZIP. In PowerShell, from your download folder:
 
 ```powershell
-Get-FileHash .\Windows-VPN-Console-v0.2.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\Windows-VPN-Console-v0.2.1-win-x64.zip -Algorithm SHA256
 ```
 
 Compare it with the matching entry in `SHA256SUMS.txt`. The values should match; capitalization does not matter. This checks file integrity, not whether a VPN connection works.
 
 ## What has been tested?
 
-[Windows validation for the interface preview](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004040500) passed **138 tests** and **44 UI checks** on both the normal build and extracted portable app. Windows-rendered screens were inspected, and profile switching now has regression coverage so refreshing the editor does not replace the selected engine. This preview is on `codex/interface-polish`; it is not yet the stable download.
+[Windows validation for the interface refresh](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004353571) passed **138 tests** and **44 UI checks** on both the normal build and extracted portable app. Windows-rendered screens were inspected, and profile switching now has regression coverage so refreshing the editor does not replace the selected engine. The v0.2.1 tag workflow repeats these gates before publishing the release ZIP.
 
 [Windows validation for v0.2.0](https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551) passed **122 tests** and **34 UI checks** on both the normal build and extracted portable app. This includes real native profile create/remove behavior, Windows Credential Manager, and the new general-purpose starting screen. The [acceptance record](docs/Acceptance.md) separates verified software behavior from live VPN checks. External client compatibility, real server authentication, routing, and encryption still need testing against your own environment.
 

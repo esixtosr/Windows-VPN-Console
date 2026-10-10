@@ -1,4 +1,4 @@
-param([string]$Version = 'v0.2.1-preview.1', [string]$OutputDirectory = 'artifacts')
+param([string]$Version = 'v0.2.1', [string]$OutputDirectory = 'artifacts')
 $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') { throw 'Version must be a semantic version prefixed v.' }
 $projectRoot = Split-Path $PSScriptRoot -Parent

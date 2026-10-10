@@ -9,22 +9,27 @@
 - Repository: https://github.com/esixtosr/Windows-VPN-Console.
 
 ## Current phase
-v0.2.0 software acceptance completed as Windows VPN Console, with a beginner README/user guide, general-purpose first-run defaults, and optional lab mode. Existing storage and provider identifiers remain compatible. The tag workflow repeats acceptance and publishes the public portable download. Live lab/server acceptance remains an explicit external verification task.
+v0.2.1 promotes the verified interface refresh to the public release at the user's request. Existing storage and provider identifiers remain compatible. The tag workflow repeats acceptance and publishes the public portable download only after the Windows gates pass. Live lab/server acceptance remains an explicit external verification task.
 
-v0.2.1-preview.1 focuses on interface cleanup and truthful network evidence. Independent IKEv2 engine work is deferred at the user's request. Earlier v1.0.0 capability/compatibility groundwork remains; this is not a v1.0.0 release.
+v0.2.1 focuses on interface cleanup and truthful network evidence. Independent IKEv2 engine work is deferred at the user's request. Earlier v1.0.0 capability/compatibility groundwork remains; this is not a v1.0.0 release.
 
-## Interface preview — 2026-10-09
+## Interface refresh — 2026-10-09
 - Original multi-size shield icon embedded in the EXE and WPF window; vector source and repeatable asset generator included.
 - Smaller shell, navigation icons, dark dropdowns, friendly enum labels, responsive forms, collapsed technical details and activity log.
 - External clients retain ownership of authentication and connection control. The editor no longer collects unused secrets or shows Windows-only IKEv2 guidance for NCP.
 - Dashboard separates observed private-route address/interface evidence from provider status and shows when diagnostics were collected. Equal-cost routes, conflicting subroutes, missing targets and down adapters do not select a misleading address.
-- Uploaded to `codex/interface-polish` with explicit user approval; `main` and the stable v0.2.0 release remain unchanged.
+- Initially verified on `codex/interface-polish`; the user subsequently requested publication as v0.2.1. The release promotion includes `main`, the version tag and a portable download; no live VPN configuration changes are included.
 - Windows CI https://github.com/esixtosr/Windows-VPN-Console/actions/runs/38004040500 at checkpoint `9d61dc4`: **138/138 tests PASS**, no skipped tests. Normal-build and extracted portable-app smoke runs: **44 assertions PASS** each across nine pages.
 - The first Windows run caught an editor refresh resetting the engine selection. Fixed temporary selector changes writing into profiles; regression checks cover profile switching and preserving authentication/in-memory secrets. UI smoke mode now blocks connect/disconnect through non-simulated engines.
 - Inspected real Windows renders of the general-purpose dashboard, compact external-client editor, observed-adapter dashboard, engines page and dropdown states. Refreshed the repository screenshot. Fixtures remain synthetic; this does not establish a real VPN handshake.
 - Local Release cross-build: zero warnings/errors. All 136 cross-platform tests passed; the two Windows-only checks subsequently passed in CI.
 - User-supplied screenshot reports NCP Connection established. Their local diagnostic report contains a private adapter address and a specific private-network route with a separate Internet interface. This supports a successful external-client connection report, not independently verified private-host access or encryption. No live reports, credentials or screenshots are packaged.
 - No router, NCP profile, authentication mode or saved-user-data migration is performed by this UI update.
+
+## v0.2.1 publication review — 2026-10-09
+- Checked 205 historical Git blobs and 94 current source files for common credential-token, private-key and credential-URL patterns. Private-key-header matches were limited to synthetic redaction/rejected-import tests, not usable keys. No unintended credentials or secret-bearing user exports were identified by this targeted check.
+- Scanned the three interface-branch workflow logs for the same credential patterns; no matches. This is not a guarantee against every possible secret format.
+- The release keeps the existing unsigned portable packaging and does not bundle external VPN engines, real profiles, course PDFs or user diagnostic exports.
 
 ## v0.2.0 validation — 2026-10-08
 - Windows CI https://github.com/esixtosr/Windows-VPN-Console/actions/runs/37878883551 at checkpoint `10d11d4`: **122/122 tests PASS**, no skipped tests.
@@ -70,9 +75,9 @@ For a new development session: read README.md and this file, inspect git status/
 For lab acceptance: install the required official engine, supply real server/profile credentials locally, validate Local Test first, then AD/RADIUS/LDAP, routing/return paths/NAT/firewalls and public-interface captures. Record actual outcomes and export redacted evidence.
 
 ## Release identity
-Tag: **v0.2.0**. The successful tag workflow supplies the corresponding release build evidence.
-Release: https://github.com/esixtosr/Windows-VPN-Console/releases/tag/v0.2.0
-Asset: **Windows-VPN-Console-v0.2.0-win-x64.zip** plus **SHA256SUMS.txt**.
+Tag: **v0.2.1**. Publication is gated on the tag's successful Windows workflow, which supplies the corresponding release build evidence.
+Release: https://github.com/esixtosr/Windows-VPN-Console/releases/tag/v0.2.1
+Asset: **Windows-VPN-Console-v0.2.1-win-x64.zip** plus **SHA256SUMS.txt**.
 The checksum in the release is authoritative; documentation edits change ZIP bytes, so candidate-build checksums are not reused.
 
 ## External dependencies
